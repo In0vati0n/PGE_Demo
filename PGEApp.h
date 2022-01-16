@@ -7,9 +7,15 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
 
+#if defined(BUILD_LUA_AS_CLIB)
+extern "C" {
+#endif
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#if defined(BUILD_LUA_AS_CLIB)
+}
+#endif
 
 namespace PGEApp
 {
@@ -107,11 +113,13 @@ namespace PGEApp
             bool InitLuaTimer()
             {
                 TimerRegisterFunctions(L);
+                return true;
             }
 
             bool InitLuaLibs()
             {
                 InitLuaTimer();
+                return true;
             }
 
             bool InitConfig()
@@ -128,6 +136,7 @@ namespace PGEApp
                 ScreenYScale = LuaGetTableIntField(L, "screen_y_scale");
 
                 lua_pop(L, 2);
+                return true;
             }
 
             bool InitLua()
@@ -155,6 +164,8 @@ namespace PGEApp
                 luaL_dostring(L, "require('game')");
 
                 InitConfig();
+
+                return true;
             }
 
         private:
