@@ -103,6 +103,12 @@ namespace PGEApp
                 return true;
             }
 
+            bool OnUserDestroy() override
+            {
+                CallLuaFunc(L, "_pge_on_destroy");
+                return true;
+            }
+
             inline int GetScreenWidth() const { return ScreenWidth; }
             inline int GetScreenHeight() const { return ScreenHeight; }
             inline int GetScreenXScale() const { return ScreenXScale; }
