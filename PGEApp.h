@@ -19,6 +19,9 @@ namespace PGEApp
 
     namespace _
     {
+        ///////////////////////////////////////////
+        // Utils
+        ///////////////////////////////////////////
         static int Traceback(lua_State *L)
         {
             lua_getglobal(L, "debug");
@@ -60,6 +63,9 @@ namespace PGEApp
 
         static int TimerRegisterFunctions(lua_State *L);
 
+        /////////////////////////////////////////////////
+        // App
+        /////////////////////////////////////////////////
         class App : public olc::PixelGameEngine
         {
         public:
@@ -162,6 +168,10 @@ namespace PGEApp
 
         static App *instance = nullptr;
 
+        ///////////////////////////////////////////////
+        // Lua Modules
+        ///////////////////////////////////////////////
+
 #define DEFINE_LUA_FUNC(name) \
     static int name(lua_State *L)
 
@@ -182,9 +192,10 @@ namespace PGEApp
             return 0;
         }
 
-        ////////////////////////////////////////
+        ///////////////////////////////////////////////
         // Timer
-        ///////////////////////////////////////
+        ///////////////////////////////////////////////
+
         DEFINE_LUA_FUNC(Timer_GetDeltaTime)
         {
             lua_pushnumber(L, instance->GetDeltaTime());
@@ -199,6 +210,10 @@ namespace PGEApp
         {
             return RegisterLuaModule(L, "timer", TimerFunctions);
         }
+
+        ///////////////////////////////////////////////
+        // Graphics
+        ///////////////////////////////////////////////
 
 #undef DEFINE_LUA_FUNC
     }
