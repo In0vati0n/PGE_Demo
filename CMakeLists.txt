@@ -30,14 +30,10 @@ set(PROJ_SOURCE_ROOT ${PROJECT_SOURCE_DIR})
 
 # Find library
 if(APPLE)
-    #########################################################
     # FIND CARBON
-    #########################################################
     find_library(CARBON_LIBRARY Carbon)
 
-    #########################################################
     # FIND PNG
-    #########################################################
     find_package(PNG REQUIRED)
     include_directories(${PNG_INCLUDE_DIRS})
     link_directories(${PNG_LIBRARY_DIRS})
@@ -46,9 +42,7 @@ if(APPLE)
         message(ERROR " PNG not found!")
     endif(NOT PNG_FOUND)
 
-    #########################################################
     # FIND GLUT
-    #########################################################
     find_package(GLUT REQUIRED)
     include_directories(${GLUT_INCLUDE_DIRS})
     link_directories(${GLUT_LIBRARY_DIRS})
@@ -57,9 +51,7 @@ if(APPLE)
         message(ERROR " GLUT not found!")
     endif(NOT GLUT_FOUND)
 
-    #########################################################
     # FIND OPENGL
-    #########################################################
     find_package(OpenGL REQUIRED)
     include_directories(${OpenGL_INCLUDE_DIRS})
     link_directories(${OpenGL_LIBRARY_DIRS})
@@ -67,7 +59,39 @@ if(APPLE)
     if(NOT OPENGL_FOUND)
         message(ERROR " OpenGL not found!")
     endif(NOT OPENGL_FOUND)
-else()
+elseif (WIN32)
+else ()
+    # FIND PNG
+    find_package(PNG REQUIRED)
+    include_directories(${PNG_INCLUDE_DIRS})
+    link_directories(${PNG_LIBRARY_DIRS})
+    add_definitions(${PNG_DEFINITIONS})
+    if(NOT PNG_FOUND)
+        message(ERROR " PNG not found!")
+    endif(NOT PNG_FOUND)
+
+    # FIND OPENGL
+    find_package(OpenGL REQUIRED)
+    include_directories(${OpenGL_INCLUDE_DIRS})
+    link_directories(${OpenGL_LIBRARY_DIRS})
+    add_definitions(${OpenGL_DEFINITIONS})
+    if(NOT OPENGL_FOUND)
+        message(ERROR " OpenGL not found!")
+    endif(NOT OPENGL_FOUND)
+
+    # FIND THREAD
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
+    find_package(Threads REQUIRED)
+    if(NOT THREADS_FOUND)
+        message(ERROR " Threads not found!")
+    endif(NOT THREADS_FOUND)
+
+    # FIND X11
+    find_package(X11 REQUIRED)
+    include_directories(${X11_INCLUDE_DIR})
+    if(NOT X11_FOUND)
+        message(ERROR " X11 not found!")
+    endif(NOT X11_FOUND)
 endif()
 
 # Set include path
@@ -90,6 +114,11 @@ else (WIN32)
     endif (CMAKE_BUILD_TYPE MATCHES "Debug")
 endif (WIN32)
 
+# Handle Filesystem
+if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 7.5)
+    add_definitions(-DFORCE_EXPERIMENTAL_FS)
+endif()
+
 add_subdirectory(libs/lua)
 add_definitions(-DBUILD_LUA_AS_CLIB)
 
@@ -108,22 +137,26 @@ if(APPLE)
         ${OPENGL_LIBRARIES}
         Lua
     )
+elseif (WIN32)
+    target_link_libraries(
+        ${PROJ_NAME}
+        Lua
+    )
 else()
     target_link_libraries(
         ${PROJ_NAME}
+        ${CARBON_LIBRARY}
+        ${PNG_LIBRARIES}
+        ${OPENGL_LIBRARIES}
+        Threads::Threads
+        ${X11_LIBRARIES}
+        stdc++fs
         Lua
     )
 endif()
 
 # Copy lua files
-if (CMAKE_BUILD_TYPE MATCHES "Debug")
-    add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${ROOT_SOURCE_DIR}/bin/${ROOT_PROJ_NAME}/Debug/_pge.lua")
-    add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${ROOT_SOURCE_DIR}/bin/${ROOT_PROJ_NAME}/Debug/game.lua")
-else (CMAKE_BUILD_TYPE MATCHES "Debug")
-    add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${ROOT_SOURCE_DIR}/bin/${ROOT_PROJ_NAME}/Release/_pge.lua")
-    add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${ROOT_SOURCE_DIR}/bin/${ROOT_PROJ_NAME}/Release/game.lua")
-endif (CMAKE_BUILD_TYPE MATCHES "Debug")
+add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${EXECUTABLE_OUTPUT_PATH}/_pge.lua")
+add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${EXECUTABLE_OUTPUT_PATH}/game.lua")
