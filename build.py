@@ -1,6 +1,7 @@
 #!usr/bin/env python3
 
 import os
+import sys
 from typing import Sequence
 
 
@@ -14,6 +15,8 @@ def gen_build_cmd(compiler: str, output_file: str, src_files: Sequence[str], inc
 
 
 def main():
+    with_running = sys.argv[1] == "-r"
+
     lua_files = collection_src_files("libs/lua")
     proj_files = collection_src_files(".")
 
@@ -22,7 +25,9 @@ def main():
                         ["./libs/lua", "./libs/olcPixelGameEngine"],
                         ["FORCE_EXPERIMENTAL_FS"], ["X11", "GL", "pthread", "png", "stdc++fs"], "c++17")
     print(cmd)
-    os.system(cmd)
+    ret_code = os.system(cmd)
+    if with_running and ret_code == 0:
+        os.system(f"./out")
 
 
 if __name__ == "__main__":
