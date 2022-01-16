@@ -2,5 +2,5 @@
 
 int main()
 {
-    PGEApp::run();
+    PGEApp::Run();
 }
