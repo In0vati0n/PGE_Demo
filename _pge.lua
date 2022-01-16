@@ -22,3 +22,9 @@ end
 function _pge_update()
     update(PGE.timer.get_delta_time())
 end
+
+function _pge_on_destroy()
+    if on_destroy then
+        on_destroy()
+    end
+end
