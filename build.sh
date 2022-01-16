@@ -1,1 +1,0 @@
-g++ -o out main.cpp -DFORCE_EXPERIMENTAL_FS -lX11 -lGL -lpthread -lpng -lstdc++fs -std=c++17
