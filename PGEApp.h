@@ -68,6 +68,7 @@ namespace PGEApp
         }
 
         static int TimerRegisterFunctions(lua_State *L);
+        static int GraphicsRegisterFunctions(lua_State *L);
 
         /////////////////////////////////////////////////
         // App
@@ -122,9 +123,16 @@ namespace PGEApp
                 return true;
             }
 
+            bool InitLuaGraphics()
+            {
+                GraphicsRegisterFunctions(L);
+                return true;
+            }
+
             bool InitLuaLibs()
             {
                 InitLuaTimer();
+                InitLuaGraphics();
                 return true;
             }
 
@@ -231,6 +239,27 @@ namespace PGEApp
         ///////////////////////////////////////////////
         // Graphics
         ///////////////////////////////////////////////
+
+        DEFINE_LUA_FUNC(Graphics_Clear)
+        {
+            // TODO: Check arguments count
+            uint8_t r = (uint8_t)lua_tointeger(L, -3);
+            uint8_t g = (uint8_t)lua_tointeger(L, -2);
+            uint8_t b = (uint8_t)lua_tointeger(L, -1);
+            lua_pop(L, 3);
+            instance->Clear({ r, g, b });
+            return 0;
+        }
+
+        static const luaL_Reg GraphicsFunctions[] = {
+            {"clear", Graphics_Clear},
+            {NULL, NULL}};
+
+        static int GraphicsRegisterFunctions(lua_State *L)
+        {
+            return RegisterLuaModule(L, "graphics", GraphicsFunctions);
+        }
+
 
 #undef DEFINE_LUA_FUNC
     }
