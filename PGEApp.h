@@ -8,7 +8,8 @@
 #include "olcPixelGameEngine.h"
 
 #if defined(BUILD_LUA_AS_CLIB)
-extern "C" {
+extern "C"
+{
 #endif
 #include "lua.h"
 #include "lualib.h"
@@ -240,26 +241,98 @@ namespace PGEApp
         // Graphics
         ///////////////////////////////////////////////
 
+        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top)
+        {
+            uint8_t r = (uint8_t)lua_tointeger(L, top + 0);
+            uint8_t g = (uint8_t)lua_tointeger(L, top + 1);
+            uint8_t b = (uint8_t)lua_tointeger(L, top + 2);
+            return {r, g, b};
+        }
+
         DEFINE_LUA_FUNC(Graphics_Clear)
         {
             // TODO: Check arguments count
-            uint8_t r = (uint8_t)lua_tointeger(L, -3);
-            uint8_t g = (uint8_t)lua_tointeger(L, -2);
-            uint8_t b = (uint8_t)lua_tointeger(L, -1);
-            lua_pop(L, 3);
-            instance->Clear({ r, g, b });
+
+            auto pixel = GetPixelFromLuaStack(L, 1);
+            instance->Clear(pixel);
             return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawLine)
+        {
+            // TODO: Check arguments count
+
+            int32_t x1 = (int32_t)lua_tointeger(L, 1);
+            int32_t y1 = (int32_t)lua_tointeger(L, 2);
+
+            int32_t x2 = (int32_t)lua_tointeger(L, 3);
+            int32_t y2 = (int32_t)lua_tointeger(L, 4);
+
+            auto pixel = GetPixelFromLuaStack(L, 5);
+
+            instance->DrawLine(x1, y1, x2, y2, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_FillRect)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tointeger(L, 1);
+            int32_t y = (int32_t)lua_tointeger(L, 2);
+
+            int32_t w = (int32_t)lua_tointeger(L, 3);
+            int32_t h = (int32_t)lua_tointeger(L, 4);
+
+            auto pixel = GetPixelFromLuaStack(L, 5);
+
+            instance->FillRect(x, y, w, h, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_FillCircle)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tointeger(L, 1);
+            int32_t y = (int32_t)lua_tointeger(L, 2);
+
+            int32_t r = (int32_t)lua_tointeger(L, 3);
+
+            auto pixel = GetPixelFromLuaStack(L, 4);
+
+            instance->FillCircle(x, y, r, pixel);
+            
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_ScreenWidth)
+        {
+            lua_pushinteger(L, instance->GetScreenWidth());
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_ScreenHeight)
+        {
+            lua_pushinteger(L, instance->GetScreenHeight());
+            return 1;
         }
 
         static const luaL_Reg GraphicsFunctions[] = {
             {"clear", Graphics_Clear},
+            {"draw_line", Graphics_DrawLine},
+            {"fill_rect", Graphics_FillRect},
+            {"fill_circle", Graphics_FillCircle},
+            {"screen_width", Graphics_ScreenWidth},
+            {"screen_height", Graphics_ScreenHeight},
             {NULL, NULL}};
 
         static int GraphicsRegisterFunctions(lua_State *L)
         {
             return RegisterLuaModule(L, "graphics", GraphicsFunctions);
         }
-
 
 #undef DEFINE_LUA_FUNC
     }
