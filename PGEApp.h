@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <iostream>
 
@@ -38,13 +39,22 @@ namespace PGEApp
             {
                 const char *error = lua_tostring(L, -1);
 
-                std::cout << "[Call Lua Error]" << error << std::endl;
+                std::cout << "[Call Lua Error] " << error << std::endl;
 
                 lua_getglobal(L, "_pge_error");
                 lua_pushstring(L, error);
                 lua_pcall(L, 1, 0, 0);
             }
 
+            return ret;
+        }
+
+        static int LuaGetTableIntField(lua_State *L, const char *fieldName)
+        {
+            int fieldType = lua_getfield(L, -1, fieldName);
+            assert(fieldType == LUA_TNUMBER);
+            int ret = lua_tointeger(L, -1);
+            lua_pop(L, 1);
             return ret;
         }
 
@@ -76,15 +86,16 @@ namespace PGEApp
 
             bool OnUserUpdate(float fElapsedTime) override
             {
-                fDeltaTime = fElapsedTime;
+                DeltaTime = fElapsedTime;
                 CallLuaFunc(L, "_pge_update");
                 return true;
             }
 
-            inline float GetDeltaTime()
-            {
-                return fDeltaTime;
-            }
+            inline int GetScreenWidth() const { return ScreenWidth; }
+            inline int GetScreenHeight() const { return ScreenHeight; }
+            inline int GetScreenXScale() const { return ScreenXScale; }
+            inline int GetScreenYScale() const { return ScreenYScale; }
+            inline float GetDeltaTime() const { return DeltaTime; }
 
         private:
             bool InitLuaTimer()
@@ -95,6 +106,22 @@ namespace PGEApp
             bool InitLuaLibs()
             {
                 InitLuaTimer();
+            }
+
+            bool InitConfig()
+            {
+                assert(lua_getglobal(L, "_pge_config"));
+                lua_pop(L, 1);
+                CallLuaFunc(L, "_pge_config");
+                lua_getglobal(L, PGELuaTableName);
+                lua_getfield(L, -1, "config");
+
+                ScreenWidth = LuaGetTableIntField(L, "screen_width");
+                ScreenHeight = LuaGetTableIntField(L, "screen_height");
+                ScreenXScale = LuaGetTableIntField(L, "screen_x_scale");
+                ScreenYScale = LuaGetTableIntField(L, "screen_y_scale");
+
+                lua_pop(L, 2);
             }
 
             bool InitLua()
@@ -120,11 +147,17 @@ namespace PGEApp
 
                 // require gameplay code
                 luaL_dostring(L, "require('game')");
+
+                InitConfig();
             }
 
         private:
             lua_State *L;
-            float fDeltaTime;
+            float DeltaTime;
+            int ScreenWidth = 200;
+            int ScreenHeight = 200;
+            int ScreenXScale = 2;
+            int ScreenYScale = 2;
         };
 
         static App *instance = nullptr;
@@ -173,8 +206,13 @@ namespace PGEApp
     bool Run()
     {
         _::instance = new _::App();
-        if (_::instance->Construct(256, 240, 4, 4))
-            _::instance->Start();
+        auto app = _::instance;
+
+        if (app->Construct(app->GetScreenWidth(),
+                           app->GetScreenHeight(),
+                           app->GetScreenXScale(),
+                           app->GetScreenYScale()))
+            app->Start();
 
         delete _::instance;
         _::instance = nullptr;
