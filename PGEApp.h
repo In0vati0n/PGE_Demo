@@ -70,6 +70,7 @@ namespace PGEApp
 
         static int TimerRegisterFunctions(lua_State *L);
         static int GraphicsRegisterFunctions(lua_State *L);
+        static int InputRegisterFunctions(lua_State *L);
 
         /////////////////////////////////////////////////
         // App
@@ -130,10 +131,136 @@ namespace PGEApp
                 return true;
             }
 
+            bool InitLuaInput()
+            {
+                InputRegisterFunctions(L);
+
+                lua_getglobal(L, PGELuaTableName);
+                lua_getfield(L, -1, "input");
+
+                lua_newtable(L);
+                lua_setfield(L, -2, "Key");
+
+                lua_getfield(L, -1, "Key");
+
+                lua_pushinteger(L, olc::Key::A);
+                lua_setfield(L, -2, "A");
+                lua_pushinteger(L, olc::Key::B);
+                lua_setfield(L, -2, "B");
+                lua_pushinteger(L, olc::Key::C);
+                lua_setfield(L, -2, "C");
+                lua_pushinteger(L, olc::Key::D);
+                lua_setfield(L, -2, "D");
+                lua_pushinteger(L, olc::Key::E);
+                lua_setfield(L, -2, "E");
+                lua_pushinteger(L, olc::Key::F);
+                lua_setfield(L, -2, "F");
+                lua_pushinteger(L, olc::Key::G);
+                lua_setfield(L, -2, "G");
+                lua_pushinteger(L, olc::Key::H);
+                lua_setfield(L, -2, "H");
+                lua_pushinteger(L, olc::Key::I);
+                lua_setfield(L, -2, "I");
+                lua_pushinteger(L, olc::Key::J);
+                lua_setfield(L, -2, "J");
+                lua_pushinteger(L, olc::Key::K);
+                lua_setfield(L, -2, "K");
+                lua_pushinteger(L, olc::Key::L);
+                lua_setfield(L, -2, "L");
+                lua_pushinteger(L, olc::Key::M);
+                lua_setfield(L, -2, "M");
+                lua_pushinteger(L, olc::Key::N);
+                lua_setfield(L, -2, "N");
+                lua_pushinteger(L, olc::Key::O);
+                lua_setfield(L, -2, "O");
+                lua_pushinteger(L, olc::Key::P);
+                lua_setfield(L, -2, "P");
+                lua_pushinteger(L, olc::Key::Q);
+                lua_setfield(L, -2, "Q");
+                lua_pushinteger(L, olc::Key::R);
+                lua_setfield(L, -2, "R");
+                lua_pushinteger(L, olc::Key::S);
+                lua_setfield(L, -2, "S");
+                lua_pushinteger(L, olc::Key::T);
+                lua_setfield(L, -2, "T");
+                lua_pushinteger(L, olc::Key::U);
+                lua_setfield(L, -2, "U");
+                lua_pushinteger(L, olc::Key::V);
+                lua_setfield(L, -2, "V");
+                lua_pushinteger(L, olc::Key::W);
+                lua_setfield(L, -2, "W");
+                lua_pushinteger(L, olc::Key::X);
+                lua_setfield(L, -2, "X");
+                lua_pushinteger(L, olc::Key::Y);
+                lua_setfield(L, -2, "Y");
+                lua_pushinteger(L, olc::Key::Z);
+                lua_setfield(L, -2, "Z");
+
+                lua_pushinteger(L, olc::Key::K0);
+                lua_setfield(L, -2, "K0");
+                lua_pushinteger(L, olc::Key::K1);
+                lua_setfield(L, -2, "K1");
+                lua_pushinteger(L, olc::Key::K2);
+                lua_setfield(L, -2, "K2");
+                lua_pushinteger(L, olc::Key::K3);
+                lua_setfield(L, -2, "K3");
+                lua_pushinteger(L, olc::Key::K4);
+                lua_setfield(L, -2, "K4");
+                lua_pushinteger(L, olc::Key::K5);
+                lua_setfield(L, -2, "K5");
+                lua_pushinteger(L, olc::Key::K6);
+                lua_setfield(L, -2, "K6");
+                lua_pushinteger(L, olc::Key::K7);
+                lua_setfield(L, -2, "K7");
+                lua_pushinteger(L, olc::Key::K8);
+                lua_setfield(L, -2, "K8");
+                lua_pushinteger(L, olc::Key::K9);
+                lua_setfield(L, -2, "K9");
+
+                lua_pushinteger(L, olc::Key::F1);
+                lua_setfield(L, -2, "F1");
+                lua_pushinteger(L, olc::Key::F2);
+                lua_setfield(L, -2, "F2");
+                lua_pushinteger(L, olc::Key::F3);
+                lua_setfield(L, -2, "F3");
+                lua_pushinteger(L, olc::Key::F4);
+                lua_setfield(L, -2, "F4");
+                lua_pushinteger(L, olc::Key::F5);
+                lua_setfield(L, -2, "F5");
+                lua_pushinteger(L, olc::Key::F6);
+                lua_setfield(L, -2, "F6");
+                lua_pushinteger(L, olc::Key::F7);
+                lua_setfield(L, -2, "F7");
+                lua_pushinteger(L, olc::Key::F8);
+                lua_setfield(L, -2, "F8");
+                lua_pushinteger(L, olc::Key::F9);
+                lua_setfield(L, -2, "F9");
+                lua_pushinteger(L, olc::Key::F10);
+                lua_setfield(L, -2, "F10");
+                lua_pushinteger(L, olc::Key::F11);
+                lua_setfield(L, -2, "F11");
+                lua_pushinteger(L, olc::Key::F12);
+                lua_setfield(L, -2, "F12");
+
+                lua_pushinteger(L, olc::Key::UP);
+                lua_setfield(L, -2, "UP");
+                lua_pushinteger(L, olc::Key::DOWN);
+                lua_setfield(L, -2, "DOWN");
+                lua_pushinteger(L, olc::Key::LEFT);
+                lua_setfield(L, -2, "LEFT");
+                lua_pushinteger(L, olc::Key::RIGHT);
+                lua_setfield(L, -2, "RIGHT");
+
+                lua_pop(L, 2);
+
+                return true;
+            }
+
             bool InitLuaLibs()
             {
                 InitLuaTimer();
                 InitLuaGraphics();
+                InitLuaInput();
                 return true;
             }
 
@@ -333,6 +460,47 @@ namespace PGEApp
         {
             return RegisterLuaModule(L, "graphics", GraphicsFunctions);
         }
+
+        ///////////////////////////////////////////////
+        // Input
+        ///////////////////////////////////////////////
+
+        DEFINE_LUA_FUNC(Input_GetKeyPressed)
+        {
+            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+            bool pressed = instance->GetKey(keycode).bPressed;
+            lua_pushboolean(L, pressed);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_GetKeyHeld)
+        {
+            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+            bool held = instance->GetKey(keycode).bHeld;
+            lua_pushboolean(L, held);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_GetKeyReleased)
+        {
+            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+            bool released = instance->GetKey(keycode).bReleased;
+            lua_pushboolean(L, released);
+            return 1;
+        }
+
+        static const luaL_Reg InputFunctions[] = {
+            {"get_key_pressed", Input_GetKeyPressed},
+            {"get_key_held", Input_GetKeyHeld},
+            {"get_key_released", Input_GetKeyReleased},
+            {NULL, NULL}
+        };
+
+        static int InputRegisterFunctions(lua_State *L)
+        {
+            return RegisterLuaModule(L, "input", InputFunctions);
+        }
+
 
 #undef DEFINE_LUA_FUNC
     }
