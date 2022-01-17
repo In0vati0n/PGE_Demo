@@ -18,10 +18,12 @@ extern "C"
 }
 #endif
 
+#include "LuaBridge.h"
+
 namespace PGEApp
 {
-    const int MajorVersion = 0;
-    const int MinorVersion = 1;
+    static int MajorVersion = 0;
+    static int MinorVersion = 1;
     const char *PGELuaTableName = "PGE";
 
     namespace _
@@ -112,6 +114,8 @@ namespace PGEApp
                 return true;
             }
 
+            inline lua_State *GetLuaState() { return L; }
+
             inline int GetScreenWidth() const { return ScreenWidth; }
             inline int GetScreenHeight() const { return ScreenHeight; }
             inline int GetScreenXScale() const { return ScreenXScale; }
@@ -135,11 +139,19 @@ namespace PGEApp
             {
                 InputRegisterFunctions(L);
 
+                auto ns = luabridge::getGlobalNamespace(L)
+                              .beginNamespace(PGELuaTableName)
+                              .beginNamespace("input")
+                              .endNamespace()
+                              .endNamespace();
+
+
                 lua_getglobal(L, PGELuaTableName);
                 lua_getfield(L, -1, "input");
 
+                lua_pushstring(L, "Key");
                 lua_newtable(L);
-                lua_setfield(L, -2, "Key");
+                lua_rawset(L, -3);
 
                 lua_getfield(L, -1, "Key");
 
@@ -251,7 +263,7 @@ namespace PGEApp
                 lua_pushinteger(L, olc::Key::RIGHT);
                 lua_setfield(L, -2, "RIGHT");
 
-                lua_pop(L, 2);
+                lua_pop(L, 3);
 
                 return true;
             }
@@ -266,18 +278,19 @@ namespace PGEApp
 
             bool InitConfig()
             {
-                assert(lua_getglobal(L, "_pge_config"));
-                lua_pop(L, 1);
-                CallLuaFunc(L, "_pge_config");
-                lua_getglobal(L, PGELuaTableName);
-                lua_getfield(L, -1, "config");
+                auto luaConfigFunc = luabridge::getGlobal(L, "_pge_config");
+                auto config = luaConfigFunc()[0];
 
-                ScreenWidth = LuaGetTableIntField(L, "screen_width");
-                ScreenHeight = LuaGetTableIntField(L, "screen_height");
-                ScreenXScale = LuaGetTableIntField(L, "screen_x_scale");
-                ScreenYScale = LuaGetTableIntField(L, "screen_y_scale");
+                luabridge::getGlobalNamespace(L)
+                    .beginNamespace(PGELuaTableName)
+                    .addProperty("config", &config, false)
+                    .endNamespace();
 
-                lua_pop(L, 2);
+                ScreenWidth = (int)config["screen_width"];
+                ScreenHeight = (int)config["screen_height"];
+                ScreenXScale = (int)config["screen_x_scale"];
+                ScreenYScale = (int)config["screen_y_scale"];
+
                 return true;
             }
 
@@ -285,16 +298,11 @@ namespace PGEApp
             {
                 luaL_openlibs(L);
 
-                // create PGE table
-                lua_newtable(L);
-
-                lua_pushinteger(L, MajorVersion);
-                lua_setfield(L, -2, "MajorVersion");
-
-                lua_pushinteger(L, MinorVersion);
-                lua_setfield(L, -2, "MinorVersion");
-
-                lua_setglobal(L, PGELuaTableName);
+                luabridge::getGlobalNamespace(L)
+                    .beginNamespace(PGELuaTableName)
+                    .addProperty("MajorVersion", &MajorVersion, false)
+                    .addProperty("MinorVersion", &MinorVersion, false)
+                    .endNamespace();
 
                 // init lua libs
                 InitLuaLibs();
@@ -330,17 +338,15 @@ namespace PGEApp
 
         static int RegisterLuaModule(lua_State *L, const char *moduleName, const luaL_Reg functions[])
         {
-            lua_newtable(L);
-            for (const luaL_Reg *reg = functions; reg->func; reg++)
-            {
-                lua_pushcfunction(L, reg->func);
-                lua_setfield(L, -2, reg->name);
-            }
+            auto ns = luabridge::getGlobalNamespace(L)
+                          .beginNamespace(PGELuaTableName)
+                          .beginNamespace(moduleName);
 
-            lua_getglobal(L, PGELuaTableName);
-            lua_pushvalue(L, -2);
-            lua_setfield(L, -2, moduleName);
-            lua_pop(L, 2);
+            for (const luaL_Reg *reg = functions; reg->func; reg++)
+                ns.addFunction(reg->name, reg->func);
+
+            ns.endNamespace()
+                .endNamespace();
 
             return 0;
         }
@@ -431,7 +437,7 @@ namespace PGEApp
             auto pixel = GetPixelFromLuaStack(L, 4);
 
             instance->FillCircle(x, y, r, pixel);
-            
+
             return 0;
         }
 
@@ -493,14 +499,12 @@ namespace PGEApp
             {"get_key_pressed", Input_GetKeyPressed},
             {"get_key_held", Input_GetKeyHeld},
             {"get_key_released", Input_GetKeyReleased},
-            {NULL, NULL}
-        };
+            {NULL, NULL}};
 
         static int InputRegisterFunctions(lua_State *L)
         {
             return RegisterLuaModule(L, "input", InputFunctions);
         }
-
 
 #undef DEFINE_LUA_FUNC
     }

@@ -97,6 +97,7 @@ endif()
 # Set include path
 include_directories(libs/lua)
 include_directories(libs/olcPixelGameEngine)
+include_directories(libs/LuaBridge)
 
 aux_source_directory(. SRC_FILES)
 file(GLOB HEADERS "${PROJECT_SOURCE_DIR}/*.h")
@@ -119,8 +120,9 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 7.5)
     add_definitions(-DFORCE_EXPERIMENTAL_FS)
 endif()
 
-add_subdirectory(libs/lua)
+# Add Lua Lib
 add_definitions(-DBUILD_LUA_AS_CLIB)
+add_subdirectory(libs/lua)
 
 add_executable(
     ${PROJ_NAME}

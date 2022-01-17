@@ -4,9 +4,9 @@ end
 
 function _pge_config()
     if config then
-        PGE.config = config()
+        return config()
     else
-        PGE.config = {
+        return {
             screen_width = 256,
             screen_height = 240,
             screen_x_scale = 2,
