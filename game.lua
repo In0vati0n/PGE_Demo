@@ -1,5 +1,6 @@
 function config()
     return {
+        title = "Breakout!",
         screen_width = 512,
         screen_height = 480,
         screen_x_scale = 1,

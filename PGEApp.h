@@ -292,6 +292,8 @@ namespace PGEApp
                     .addProperty("config", &config, false)
                     .endNamespace();
 
+                sAppName = (const char *)config["title"];
+
                 ScreenWidth = (int)config["screen_width"];
                 ScreenHeight = (int)config["screen_height"];
                 ScreenXScale = (int)config["screen_x_scale"];
