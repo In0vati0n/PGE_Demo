@@ -103,8 +103,15 @@ namespace PGEApp
 
             bool OnUserUpdate(float fElapsedTime) override
             {
-                DeltaTime = fElapsedTime;
-                CallLuaFunc(L, "_pge_update");
+                AccumulatedTime += fElapsedTime;
+
+                while (AccumulatedTime >= TargetFrameTime)
+                {
+                    AccumulatedTime -= TargetFrameTime;
+                    DeltaTime = TargetFrameTime;
+                    CallLuaFunc(L, "_pge_update");
+                }
+
                 return true;
             }
 
@@ -289,6 +296,8 @@ namespace PGEApp
                 ScreenHeight = (int)config["screen_height"];
                 ScreenXScale = (int)config["screen_x_scale"];
                 ScreenYScale = (int)config["screen_y_scale"];
+                TargetFrame = (int)config["target_frame"];
+                TargetFrameTime = 1.0f / TargetFrame;
 
                 return true;
             }
@@ -319,7 +328,13 @@ namespace PGEApp
 
         private:
             lua_State *L;
+
             float DeltaTime;
+
+            int TargetFrame = 60;
+            float TargetFrameTime = 0;
+            float AccumulatedTime = 0;
+
             int ScreenWidth = 200;
             int ScreenHeight = 200;
             int ScreenXScale = 2;
