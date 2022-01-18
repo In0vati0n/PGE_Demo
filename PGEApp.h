@@ -145,7 +145,6 @@ namespace PGEApp
                               .endNamespace()
                               .endNamespace();
 
-
                 lua_getglobal(L, PGELuaTableName);
                 lua_getfield(L, -1, "input");
 
@@ -395,11 +394,11 @@ namespace PGEApp
         {
             // TODO: Check arguments count
 
-            int32_t x1 = (int32_t)lua_tointeger(L, 1);
-            int32_t y1 = (int32_t)lua_tointeger(L, 2);
+            int32_t x1 = (int32_t)lua_tonumber(L, 1);
+            int32_t y1 = (int32_t)lua_tonumber(L, 2);
 
-            int32_t x2 = (int32_t)lua_tointeger(L, 3);
-            int32_t y2 = (int32_t)lua_tointeger(L, 4);
+            int32_t x2 = (int32_t)lua_tonumber(L, 3);
+            int32_t y2 = (int32_t)lua_tonumber(L, 4);
 
             auto pixel = GetPixelFromLuaStack(L, 5);
 
@@ -412,11 +411,11 @@ namespace PGEApp
         {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tointeger(L, 1);
-            int32_t y = (int32_t)lua_tointeger(L, 2);
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
 
-            int32_t w = (int32_t)lua_tointeger(L, 3);
-            int32_t h = (int32_t)lua_tointeger(L, 4);
+            int32_t w = (int32_t)lua_tonumber(L, 3);
+            int32_t h = (int32_t)lua_tonumber(L, 4);
 
             auto pixel = GetPixelFromLuaStack(L, 5);
 
@@ -429,10 +428,10 @@ namespace PGEApp
         {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tointeger(L, 1);
-            int32_t y = (int32_t)lua_tointeger(L, 2);
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
 
-            int32_t r = (int32_t)lua_tointeger(L, 3);
+            int32_t r = (int32_t)lua_tonumber(L, 3);
 
             auto pixel = GetPixelFromLuaStack(L, 4);
 
@@ -471,7 +470,7 @@ namespace PGEApp
         // Input
         ///////////////////////////////////////////////
 
-        DEFINE_LUA_FUNC(Input_GetKeyPressed)
+        DEFINE_LUA_FUNC(Input_IsKeyPressed)
         {
             olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
             bool pressed = instance->GetKey(keycode).bPressed;
@@ -479,7 +478,7 @@ namespace PGEApp
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_GetKeyHeld)
+        DEFINE_LUA_FUNC(Input_IsKeyHeld)
         {
             olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
             bool held = instance->GetKey(keycode).bHeld;
@@ -487,7 +486,7 @@ namespace PGEApp
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_GetKeyReleased)
+        DEFINE_LUA_FUNC(Input_IsKeyReleased)
         {
             olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
             bool released = instance->GetKey(keycode).bReleased;
@@ -495,10 +494,55 @@ namespace PGEApp
             return 1;
         }
 
+        DEFINE_LUA_FUNC(Input_IsMousePressed)
+        {
+            auto mouseId = lua_tointeger(L, 1);
+            lua_pushboolean(L, instance->GetMouse(mouseId).bPressed);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_IsMouseHeld)
+        {
+            auto mouseId = lua_tointeger(L, 1);
+            lua_pushboolean(L, instance->GetMouse(mouseId).bHeld);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_IsMouseReleased)
+        {
+            auto mouseId = lua_tointeger(L, 1);
+            lua_pushboolean(L, instance->GetMouse(mouseId).bReleased);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_GetMouseX)
+        {
+            lua_pushnumber(L, instance->GetMouseX());
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_GetMouseY)
+        {
+            lua_pushnumber(L, instance->GetMouseY());
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Input_GetMouseWheel)
+        {
+            lua_pushnumber(L, instance->GetMouseWheel());
+            return 1;
+        }
+
         static const luaL_Reg InputFunctions[] = {
-            {"get_key_pressed", Input_GetKeyPressed},
-            {"get_key_held", Input_GetKeyHeld},
-            {"get_key_released", Input_GetKeyReleased},
+            {"is_key_pressed", Input_IsKeyPressed},
+            {"is_key_held", Input_IsKeyHeld},
+            {"is_key_released", Input_IsKeyReleased},
+            {"is_mouse_pressed", Input_IsMousePressed},
+            {"is_mouse_held", Input_IsMouseHeld},
+            {"is_mouse_released", Input_IsMouseReleased},
+            {"mouse_x", Input_GetMouseX},
+            {"mouse_y", Input_GetMouseY},
+            {"mouse_wheel", Input_GetMouseWheel},
             {NULL, NULL}};
 
         static int InputRegisterFunctions(lua_State *L)
