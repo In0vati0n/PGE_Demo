@@ -4,8 +4,7 @@ function config()
         screen_width = 512,
         screen_height = 480,
         screen_x_scale = 1,
-        screen_y_scale = 1,
-        target_frame = 60
+        screen_y_scale = 1
     }
 end
 
@@ -18,12 +17,15 @@ local bat_speed = 250
 
 local ball_pos = {x = 0, y = 0}
 local ball_dir = {x = 0, y = 0}
-local ball_speed = 20
+local ball_speed = 40
 local ball_radius = 5
 
 local block_size = {w = 16, h = 16}
 local blocks = {}
 local spr_tile = nil
+local dec_fragment = nil
+
+local list_fragments = {}
 
 function load()
     print("Version: " .. PGE.MajorVersion .. "." .. PGE.MinorVersion)
@@ -49,6 +51,11 @@ function load()
     -- load the sprite
     spr_tile = g.load_sprite("./assets/tut_tiles.png")
 
+    -- load fragment sprite
+    local spr_frag = g.load_sprite("./assets/tut_fragment.png")
+    -- create decal of fragment
+    dec_fragment = g.create_decal(spr_frag)
+
     -- start ball
     local angle = math.random() * 2 * 3.14159
     angle = -0.4
@@ -70,7 +77,7 @@ function update(dt)
         y = ball_radius / block_size.h
     }
 
-    local test_resolve_collision_point = function(point)
+    local test_resolve_collision_point = function(point, info)
         local test_point = {
             x = math.floor(potential_ball_pos.x + tile_ball_radial_dims.x * point.x),
             y = math.floor(potential_ball_pos.y + tile_ball_radial_dims.y * point.y)
@@ -84,6 +91,11 @@ function update(dt)
             -- ball has collided with a tile
             local tile_hit = tile < 10
             if tile_hit then
+                info.id = tile
+                info.hit_pos = {
+                    x = test_point.x,
+                    y = test_point.y
+                }
                 blocks[tile_idx] = tile - 1
             end
 
@@ -101,10 +113,39 @@ function update(dt)
     end
 
     local has_hit_tile = false
-    has_hit_tile = test_resolve_collision_point({x = 0, y = -1}) or has_hit_tile
-    has_hit_tile = test_resolve_collision_point({x = 0, y = 1}) or has_hit_tile
-    has_hit_tile = test_resolve_collision_point({x = -1, y = 0}) or has_hit_tile
-    has_hit_tile = test_resolve_collision_point({x = 1, y = 0}) or has_hit_tile
+    local info = {}
+    has_hit_tile = test_resolve_collision_point({x = 0, y = -1}, info) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = 0, y = 1}, info) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = -1, y = 0}, info) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = 1, y = 0}, info) or has_hit_tile
+
+    if has_hit_tile then
+        for i = 1, 100 do
+            local f = {
+                pos = {
+                    x = info.hit_pos.x + 0.5,
+                    y = info.hit_pos.y + 0.5
+                }
+            }
+            local angle = math.random() * 2 * 3.14159
+            local velocity = math.random() * 10
+            f.vel = {
+                x = velocity * math.cos(angle),
+                y = velocity * math.sin(angle)
+            }
+            f.angle = angle
+            f.time = 3
+            if info.id == 1 then
+                f.color = {r = 255, g = 0, b = 0, a = 255}
+            elseif info.id == 2 then
+                f.color = {r = 0, g = 255, b = 0, a = 255}
+            elseif info.id == 3 then
+                f.color = {r = 255, g = 255, b = 0, a = 255}
+            end
+
+            list_fragments[#list_fragments + 1] = f
+        end
+    end
 
     -- fake floor
     if ball_pos.y > 20 then
@@ -113,6 +154,25 @@ function update(dt)
 
     -- actually update ball position with modified direction
     ball_pos.x, ball_pos.y = ball_pos.x + ball_dir.x * ball_speed * dt, ball_pos.y + ball_dir.y * ball_speed * dt
+
+    local remove_idx = {}
+    -- update list_fragments
+    for i, f in ipairs(list_fragments) do
+        f.vel.y = f.vel.y + 20 * dt
+        f.pos.x, f.pos.y = f.pos.x + f.vel.x * dt, f.pos.y + f.vel.y * dt
+        f.angle = f.angle + 5 * dt
+        f.time = f.time - dt
+        f.color.a = math.floor(f.time / 3 * 255)
+
+        if f.time < 0 then
+            remove_idx[#remove_idx + 1] = i
+        end
+    end
+
+    -- remove dead fragments
+    for i, idx in ipairs(remove_idx) do
+        table.remove(list_fragments, idx)
+    end
 
     -- erase previous frame
     g.clear(0, 0, 128)
@@ -169,4 +229,22 @@ function update(dt)
 
     -- draw ball
     g.fill_circle(ball_pos.x * block_size.w, ball_pos.y * block_size.h, ball_radius, 0, 255, 255)
+
+    -- draw fragments
+    for i, f in ipairs(list_fragments) do
+        g.draw_rotated_decal(
+            f.pos.x * block_size.w,
+            f.pos.y * block_size.h,
+            dec_fragment,
+            f.angle,
+            4,
+            4,
+            1,
+            1,
+            f.color.r,
+            f.color.g,
+            f.color.b,
+            f.color.a
+        )
+    end
 end

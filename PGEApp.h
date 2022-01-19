@@ -65,7 +65,7 @@ namespace PGEApp
         {
             int fieldType = lua_getfield(L, -1, fieldName);
             assert(fieldType == LUA_TNUMBER);
-            int ret = lua_tointeger(L, -1);
+            int ret = (int)lua_tointeger(L, -1);
             lua_pop(L, 1);
             return ret;
         }
@@ -103,14 +103,8 @@ namespace PGEApp
 
             bool OnUserUpdate(float fElapsedTime) override
             {
-                AccumulatedTime += fElapsedTime;
-
-                while (AccumulatedTime >= TargetFrameTime)
-                {
-                    AccumulatedTime -= TargetFrameTime;
-                    DeltaTime = TargetFrameTime;
-                    CallLuaFunc(L, "_pge_update");
-                }
+                DeltaTime = fElapsedTime;
+                CallLuaFunc(L, "_pge_update");
 
                 return true;
             }
@@ -326,8 +320,6 @@ namespace PGEApp
                 ScreenHeight = (int)config["screen_height"];
                 ScreenXScale = (int)config["screen_x_scale"];
                 ScreenYScale = (int)config["screen_y_scale"];
-                TargetFrame = (int)config["target_frame"];
-                TargetFrameTime = 1.0f / TargetFrame;
 
                 return true;
             }
@@ -360,10 +352,6 @@ namespace PGEApp
             lua_State *L;
 
             float DeltaTime;
-
-            int TargetFrame = 60;
-            float TargetFrameTime = 0;
-            float AccumulatedTime = 0;
 
             int ScreenWidth = 200;
             int ScreenHeight = 200;
@@ -418,12 +406,22 @@ namespace PGEApp
         // Graphics
         ///////////////////////////////////////////////
 
-        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top)
+        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top, bool useAlpha = false)
         {
             uint8_t r = (uint8_t)lua_tointeger(L, top + 0);
             uint8_t g = (uint8_t)lua_tointeger(L, top + 1);
             uint8_t b = (uint8_t)lua_tointeger(L, top + 2);
-            return {r, g, b};
+
+            if (!useAlpha)
+            {
+
+                return {r, g, b};
+            }
+            else
+            {
+                uint8_t a = (uint8_t)lua_tointeger(L, top + 3);
+                return {r, g, b, a};
+            }
         }
 
         DEFINE_LUA_FUNC(Graphics_Clear)
@@ -511,7 +509,29 @@ namespace PGEApp
         DEFINE_LUA_FUNC(Graphics_UnloadSprite)
         {
             auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+            assert(sprite);
             delete sprite;
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_CreateDecal)
+        {
+            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+            assert(sprite);
+
+            auto decal = new olc::Decal(sprite);
+            assert(decal);
+
+            lua_pushlightuserdata(L, decal);
+
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DestroyDecal)
+        {
+            auto decal = (olc::Decal *)lua_topointer(L, 1);
+            assert(decal);
+            delete decal;
             return 0;
         }
 
@@ -551,6 +571,46 @@ namespace PGEApp
             return 0;
         }
 
+        DEFINE_LUA_FUNC(Graphics_DrawDecal)
+        {
+            // TODO: Check arguments count
+
+            float x = (float)lua_tonumber(L, 1);
+            float y = (float)lua_tonumber(L, 2);
+
+            auto decal = (olc::Decal *)lua_topointer(L, 3);
+            assert(decal);
+
+            instance->DrawDecal({x, y}, decal);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawRotatedDecal)
+        {
+            // TODO: Check arguments count
+
+            float x = (float)lua_tonumber(L, 1);
+            float y = (float)lua_tonumber(L, 2);
+
+            auto decal = (olc::Decal *)lua_topointer(L, 3);
+            // assert(decal);
+
+            float angle = (float)lua_tonumber(L, 4);
+
+            float xCenter = (float)lua_tonumber(L, 5);
+            float yCenter = (float)lua_tonumber(L, 6);
+
+            float xScale = (float)lua_tonumber(L, 7);
+            float yScale = (float)lua_tonumber(L, 8);
+
+            auto tint = GetPixelFromLuaStack(L, 9, true);
+
+            instance->DrawRotatedDecal({x, y}, decal, angle, {xCenter, yCenter}, {xScale, yScale}, tint);
+
+            return 0;
+        }
+
         DEFINE_LUA_FUNC(Graphics_SetPixelMode)
         {
             olc::Pixel::Mode mode = (olc::Pixel::Mode)lua_tointeger(L, 1);
@@ -571,8 +631,13 @@ namespace PGEApp
 
             {"load_sprite", Graphics_LoadSprite},
             {"unload_sprite", Graphics_UnloadSprite},
+            {"create_decal", Graphics_CreateDecal},
+            {"destroy_decal", Graphics_DestroyDecal},
+
             {"draw_sprite", Graphics_DrawSprite},
             {"draw_partial_sprite", Graphics_DrawPartialSprite},
+            {"draw_decal", Graphics_DrawDecal},
+            {"draw_rotated_decal", Graphics_DrawRotatedDecal},
 
             {"set_pixel_mode", Graphics_SetPixelMode},
 
@@ -613,14 +678,14 @@ namespace PGEApp
 
         DEFINE_LUA_FUNC(Input_IsMousePressed)
         {
-            auto mouseId = lua_tointeger(L, 1);
+            auto mouseId = (uint32_t)lua_tointeger(L, 1);
             lua_pushboolean(L, instance->GetMouse(mouseId).bPressed);
             return 1;
         }
 
         DEFINE_LUA_FUNC(Input_IsMouseHeld)
         {
-            auto mouseId = lua_tointeger(L, 1);
+            auto mouseId = (uint32_t)lua_tointeger(L, 1);
             lua_pushboolean(L, instance->GetMouse(mouseId).bHeld);
             return 1;
         }

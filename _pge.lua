@@ -7,10 +7,11 @@ function _pge_config()
         return config()
     else
         return {
+            title = "PGE",
             screen_width = 256,
             screen_height = 240,
             screen_x_scale = 2,
-            screen_y_scale = 2,
+            screen_y_scale = 2
         }
     end
 end
