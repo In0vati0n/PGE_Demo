@@ -36,81 +36,71 @@ function load()
             else
                 blocks[(y - 1) * 24 + x] = 0
             end
-        end
-    end
 
-    spr_tile = g.load_sprite("./assets/tut_tile.png")
-end
-
-function update(dt)
-    -- handle user input
-    if i.is_key_held(i.Key.LEFT) then
-        bat_pos = bat_pos - bat_speed * dt
-    end
-
-    if i.is_key_held(i.Key.RIGHT) then
-        bat_pos = bat_pos + bat_speed * dt
-    end
-
-    if bat_pos < 11 then
-        bat_pos = 11
-    end
-
-    if bat_pos + bat_width > g.screen_width() - 10 then
-        bat_pos = g.screen_width() - 10 - bat_width
-    end
-
-    -- update ball
-    ball_x = ball_x + ball_vx * dt
-    ball_y = ball_y + ball_vy * dt
-
-    -- really crude arena detection - this approach sucks
-    if ball_y <= 10 then
-        ball_vy = ball_vy * -1
-    end
-    if ball_x <= 10 then
-        ball_vx = ball_vx * -1
-    end
-    if ball_x >= g.screen_width() - 10 then
-        ball_vx = ball_vx * -1
-    end
-
-    -- check bat
-    if ball_y > g.screen_height() - 20 and ball_x > bat_pos and ball_x < bat_pos + bat_width then
-        ball_vy = ball_vy * -1
-    end
-
-    -- check if ball has gone off screen
-    if ball_y > g.screen_height() then
-        -- reset ball location
-        ball_x = 200
-        ball_y = 200
-
-        -- choose random direction
-        local angle = math.random() * 2 * 3.14159
-        ball_vx = 300 * math.cos(angle)
-        ball_vy = 300 * math.sin(angle)
-    end
-
-    -- erase previous frame
-    g.clear(0, 0, 128)
-
-    for y = 1, 30 do
-        for x = 1, 24 do
-            if blocks[(y - 1) * 24 + x] == 10 then
-                g.draw_sprite((x - 1) * block_size.w, (y - 1) * block_size.h, spr_tile)
+            if x > 3 and x <= 21 and y > 4 and y <= 6 then
+                blocks[(y - 1) * 24 + x] = 1
+            elseif x > 3 and x <= 21 and y > 6 and y <= 8 then
+                blocks[(y - 1) * 24 + x] = 2
+            elseif x > 3 and x <= 21 and y > 8 and y <= 10 then
+                blocks[(y - 1) * 24 + x] = 3
             end
         end
     end
 
-    -- draw boundary
-    g.draw_line(10, 10, g.screen_width() - 10, 10, 255, 255, 0)
-    g.draw_line(10, 10, 10, g.screen_height() - 10, 255, 255, 0)
-    g.draw_line(g.screen_width() - 10, 10, g.screen_width() - 10, g.screen_height() - 10, 255, 255, 0)
+    spr_tile = g.load_sprite("./assets/tut_tiles.png")
+end
 
-    -- draw bat
-    g.fill_rect(bat_pos, g.screen_height() - 20, bat_width, 10, 0, 255, 0)
+function update(dt)
+    -- erase previous frame
+    g.clear(0, 0, 128)
+    g.set_pixel_mode(g.PixelMode.Mask)
 
-    -- draw ball
-    g.fill_circle(ball_x, ball_y, ball_radius, 0, 255, 255)
+    for y = 1, 30 do
+        for x = 1, 24 do
+            local v = blocks[(y - 1) * 24 + x]
+            if v == 10 then
+                g.draw_partial_sprite(
+                    x * block_size.w,
+                    y * block_size.h,
+                    spr_tile,
+                    0 * block_size.w,
+                    0 * block_size.h,
+                    block_size.w,
+                    block_size.h
+                )
+            elseif v == 1 then
+                g.draw_partial_sprite(
+                    x * block_size.w,
+                    y * block_size.h,
+                    spr_tile,
+                    1 * block_size.w,
+                    0 * block_size.h,
+                    block_size.w,
+                    block_size.h
+                )
+            elseif v == 2 then
+                g.draw_partial_sprite(
+                    x * block_size.w,
+                    y * block_size.h,
+                    spr_tile,
+                    2 * block_size.w,
+                    0 * block_size.h,
+                    block_size.w,
+                    block_size.h
+                )
+            elseif v == 3 then
+                g.draw_partial_sprite(
+                    x * block_size.w,
+                    y * block_size.h,
+                    spr_tile,
+                    3 * block_size.w,
+                    0 * block_size.h,
+                    block_size.w,
+                    block_size.h
+                )
+            end
+        end
+    end
+
+    g.set_pixel_mode(g.PixelMode.Normal)
 end

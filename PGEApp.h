@@ -139,6 +139,34 @@ namespace PGEApp
             bool InitLuaGraphics()
             {
                 GraphicsRegisterFunctions(L);
+
+                luabridge::getGlobalNamespace(L)
+                    .beginNamespace(PGELuaTableName)
+                    .beginNamespace("graphics")
+                    .endNamespace()
+                    .endNamespace();
+
+                lua_getglobal(L, PGELuaTableName);
+                lua_getfield(L, -1, "graphics");
+
+                lua_pushstring(L, "PixelMode");
+                lua_newtable(L);
+                lua_rawset(L, -3);
+
+                lua_getfield(L, -1, "PixelMode");
+
+                lua_pushinteger(L, olc::Pixel::NORMAL);
+                lua_setfield(L, -2, "Normal");
+
+                lua_pushinteger(L, olc::Pixel::MASK);
+                lua_setfield(L, -2, "Mask");
+
+                lua_pushinteger(L, olc::Pixel::ALPHA);
+                lua_setfield(L, -2, "Alpha");
+
+                lua_pushinteger(L, olc::Pixel::CUSTOM);
+                lua_setfield(L, -2, "Custom");
+
                 return true;
             }
 
@@ -146,11 +174,11 @@ namespace PGEApp
             {
                 InputRegisterFunctions(L);
 
-                auto ns = luabridge::getGlobalNamespace(L)
-                              .beginNamespace(PGELuaTableName)
-                              .beginNamespace("input")
-                              .endNamespace()
-                              .endNamespace();
+                luabridge::getGlobalNamespace(L)
+                    .beginNamespace(PGELuaTableName)
+                    .beginNamespace("input")
+                    .endNamespace()
+                    .endNamespace();
 
                 lua_getglobal(L, PGELuaTableName);
                 lua_getfield(L, -1, "input");
@@ -502,6 +530,35 @@ namespace PGEApp
             return 0;
         }
 
+        DEFINE_LUA_FUNC(Graphics_DrawPartialSprite)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            auto sprite = (olc::Sprite *)lua_topointer(L, 3);
+            assert(sprite);
+
+            int32_t xOffset = (int32_t)lua_tonumber(L, 4);
+            int32_t yOffset = (int32_t)lua_tonumber(L, 5);
+
+            int32_t width = (int32_t)lua_tonumber(L, 6);
+            int32_t height = (int32_t)lua_tonumber(L, 7);
+
+            instance->DrawPartialSprite(x, y, sprite, xOffset, yOffset, width, height);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_SetPixelMode)
+        {
+            olc::Pixel::Mode mode = (olc::Pixel::Mode)lua_tointeger(L, 1);
+            instance->SetPixelMode(mode);
+
+            return 0;
+        }
+
         static const luaL_Reg GraphicsFunctions[] = {
             {"clear", Graphics_Clear},
 
@@ -515,6 +572,9 @@ namespace PGEApp
             {"load_sprite", Graphics_LoadSprite},
             {"unload_sprite", Graphics_UnloadSprite},
             {"draw_sprite", Graphics_DrawSprite},
+            {"draw_partial_sprite", Graphics_DrawPartialSprite},
+
+            {"set_pixel_mode", Graphics_SetPixelMode},
 
             {NULL, NULL}};
 
