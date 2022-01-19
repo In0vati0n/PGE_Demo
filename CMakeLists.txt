@@ -6,6 +6,7 @@ project(${PROJ_NAME})
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_FIND_FRAMEWORK LAST)
 
 option(DEBUG "Debug Version" on)
 

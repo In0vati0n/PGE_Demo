@@ -9,10 +9,6 @@ function config()
     }
 end
 
-function load()
-    print("Version: " .. PGE.MajorVersion .. "." .. PGE.MinorVersion)
-end
-
 local g = PGE.graphics
 local i = PGE.input
 
@@ -25,6 +21,26 @@ local ball_y = 200
 local ball_vx = 200
 local ball_vy = -100
 local ball_radius = 5
+
+local block_size = {w = 16, h = 16}
+local blocks = {}
+local spr_tile = nil
+
+function load()
+    print("Version: " .. PGE.MajorVersion .. "." .. PGE.MinorVersion)
+
+    for y = 1, 30 do
+        for x = 1, 24 do
+            if x == 1 or y == 1 or x == 24 then
+                blocks[(y - 1) * 24 + x] = 10
+            else
+                blocks[(y - 1) * 24 + x] = 0
+            end
+        end
+    end
+
+    spr_tile = g.load_sprite("./assets/tut_tile.png")
+end
 
 function update(dt)
     -- handle user input
@@ -78,6 +94,14 @@ function update(dt)
 
     -- erase previous frame
     g.clear(0, 0, 128)
+
+    for y = 1, 30 do
+        for x = 1, 24 do
+            if blocks[(y - 1) * 24 + x] == 10 then
+                g.draw_sprite((x - 1) * block_size.w, (y - 1) * block_size.h, spr_tile)
+            end
+        end
+    end
 
     -- draw boundary
     g.draw_line(10, 10, g.screen_width() - 10, 10, 255, 255, 0)

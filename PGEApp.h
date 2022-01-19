@@ -469,13 +469,53 @@ namespace PGEApp
             return 1;
         }
 
+        DEFINE_LUA_FUNC(Graphics_LoadSprite)
+        {
+            auto path = lua_tostring(L, 1);
+
+            auto sprite = new olc::Sprite(std::string(path));
+            assert(sprite);
+
+            lua_pushlightuserdata(L, sprite);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_UnloadSprite)
+        {
+            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+            delete sprite;
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawSprite)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            auto sprite = (olc::Sprite *)lua_topointer(L, 3);
+            assert(sprite);
+
+            instance->DrawSprite(x, y, sprite);
+
+            return 0;
+        }
+
         static const luaL_Reg GraphicsFunctions[] = {
             {"clear", Graphics_Clear},
+
             {"draw_line", Graphics_DrawLine},
             {"fill_rect", Graphics_FillRect},
             {"fill_circle", Graphics_FillCircle},
+
             {"screen_width", Graphics_ScreenWidth},
             {"screen_height", Graphics_ScreenHeight},
+
+            {"load_sprite", Graphics_LoadSprite},
+            {"unload_sprite", Graphics_UnloadSprite},
+            {"draw_sprite", Graphics_DrawSprite},
+
             {NULL, NULL}};
 
         static int GraphicsRegisterFunctions(lua_State *L)
