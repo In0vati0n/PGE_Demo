@@ -16,10 +16,9 @@ local bat_pos = 20
 local bat_width = 40
 local bat_speed = 250
 
-local ball_x = 200
-local ball_y = 200
-local ball_vx = 200
-local ball_vy = -100
+local ball_pos = {x = 0, y = 0}
+local ball_dir = {x = 0, y = 0}
+local ball_speed = 20
 local ball_radius = 5
 
 local block_size = {w = 16, h = 16}
@@ -47,10 +46,74 @@ function load()
         end
     end
 
+    -- load the sprite
     spr_tile = g.load_sprite("./assets/tut_tiles.png")
+
+    -- start ball
+    local angle = math.random() * 2 * 3.14159
+    angle = -0.4
+    ball_dir.x, ball_dir.y = math.cos(angle), math.sin(angle)
+    ball_pos.x, ball_pos.y = 12.5, 12.5
 end
 
 function update(dt)
+    -- a better collision detection
+    -- calculate where ball should be, if no collision
+    local potential_ball_pos = {
+        x = ball_pos.x + ball_dir.x * ball_speed * dt,
+        y = ball_pos.y + ball_dir.y * ball_speed * dt
+    }
+
+    -- test for hits 4 points around ball
+    local tile_ball_radial_dims = {
+        x = ball_radius / block_size.w,
+        y = ball_radius / block_size.h
+    }
+
+    local test_resolve_collision_point = function(point)
+        local test_point = {
+            x = math.floor(potential_ball_pos.x + tile_ball_radial_dims.x * point.x),
+            y = math.floor(potential_ball_pos.y + tile_ball_radial_dims.y * point.y)
+        }
+
+        local tile_idx = (test_point.y - 1) * 24 + test_point.x
+        local tile = blocks[tile_idx]
+        if not tile or tile == 0 then
+            return false
+        else
+            -- ball has collided with a tile
+            local tile_hit = tile < 10
+            if tile_hit then
+                blocks[tile_idx] = tile - 1
+            end
+
+            -- collision response
+            if point.x == 0 then
+                ball_dir.y = ball_dir.y * -1
+            end
+
+            if point.y == 0 then
+                ball_dir.x = ball_dir.x * -1
+            end
+
+            return tile_hit
+        end
+    end
+
+    local has_hit_tile = false
+    has_hit_tile = test_resolve_collision_point({x = 0, y = -1}) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = 0, y = 1}) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = -1, y = 0}) or has_hit_tile
+    has_hit_tile = test_resolve_collision_point({x = 1, y = 0}) or has_hit_tile
+
+    -- fake floor
+    if ball_pos.y > 20 then
+        ball_dir.y = ball_dir.y * -1
+    end
+
+    -- actually update ball position with modified direction
+    ball_pos.x, ball_pos.y = ball_pos.x + ball_dir.x * ball_speed * dt, ball_pos.y + ball_dir.y * ball_speed * dt
+
     -- erase previous frame
     g.clear(0, 0, 128)
     g.set_pixel_mode(g.PixelMode.Mask)
@@ -103,4 +166,7 @@ function update(dt)
     end
 
     g.set_pixel_mode(g.PixelMode.Normal)
+
+    -- draw ball
+    g.fill_circle(ball_pos.x * block_size.w, ball_pos.y * block_size.h, ball_radius, 0, 255, 255)
 end
