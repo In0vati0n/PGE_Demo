@@ -446,25 +446,17 @@ namespace PGEApp
         // Graphics
         ///////////////////////////////////////////////
 
-        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top, bool useAlpha = false)
+        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top)
         {
             uint8_t r = (uint8_t)lua_tointeger(L, top + 0);
             uint8_t g = (uint8_t)lua_tointeger(L, top + 1);
             uint8_t b = (uint8_t)lua_tointeger(L, top + 2);
 
-            if (!useAlpha)
-            {
+            uint8_t a = 255;
+            if (lua_gettop(L) >= top + 3)
+                a = (uint8_t)lua_tointeger(L, top + 3);
 
-                return {r, g, b};
-            }
-            else
-            {
-                uint8_t a = 255;
-                if (lua_gettop(L) >= top + 3)
-                    a = (uint8_t)lua_tointeger(L, top + 3);
-
-                return {r, g, b, a};
-            }
+            return {r, g, b, a};
         }
 
         DEFINE_LUA_FUNC(Graphics_SetDrawTarget)
@@ -502,8 +494,22 @@ namespace PGEApp
         {
             // TODO: Check arguments count
 
-            auto pixel = GetPixelFromLuaStack(L, 1, true);
+            auto pixel = GetPixelFromLuaStack(L, 1);
             instance->Clear(pixel);
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_Draw)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            auto pixel = GetPixelFromLuaStack(L, 3);
+
+            instance->Draw(x, y, pixel);
+
             return 0;
         }
 
@@ -520,6 +526,55 @@ namespace PGEApp
             auto pixel = GetPixelFromLuaStack(L, 5);
 
             instance->DrawLine(x1, y1, x2, y2, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawCircle)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            int32_t r = (int32_t)lua_tonumber(L, 3);
+
+            auto pixel = GetPixelFromLuaStack(L, 4);
+
+            instance->DrawCircle(x, y, r, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_FillCircle)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            int32_t r = (int32_t)lua_tonumber(L, 3);
+
+            auto pixel = GetPixelFromLuaStack(L, 4);
+
+            instance->FillCircle(x, y, r, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawRect)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            int32_t w = (int32_t)lua_tonumber(L, 3);
+            int32_t h = (int32_t)lua_tonumber(L, 4);
+
+            auto pixel = GetPixelFromLuaStack(L, 5);
+
+            instance->DrawRect(x, y, w, h, pixel);
 
             return 0;
         }
@@ -541,18 +596,42 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_FillCircle)
+        DEFINE_LUA_FUNC(Graphics_DrawTriangle)
         {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x1 = (int32_t)lua_tonumber(L, 1);
+            int32_t y1 = (int32_t)lua_tonumber(L, 2);
 
-            int32_t r = (int32_t)lua_tonumber(L, 3);
+            int32_t x2 = (int32_t)lua_tonumber(L, 3);
+            int32_t y2 = (int32_t)lua_tonumber(L, 4);
 
-            auto pixel = GetPixelFromLuaStack(L, 4);
+            int32_t x3 = (int32_t)lua_tonumber(L, 5);
+            int32_t y3 = (int32_t)lua_tonumber(L, 6);
 
-            instance->FillCircle(x, y, r, pixel);
+            auto pixel = GetPixelFromLuaStack(L, 7);
+
+            instance->DrawTriangle(x1, y1, x2, y2, x3, y3, pixel);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_FillTriangle)
+        {
+            // TODO: Check arguments count
+
+            int32_t x1 = (int32_t)lua_tonumber(L, 1);
+            int32_t y1 = (int32_t)lua_tonumber(L, 2);
+
+            int32_t x2 = (int32_t)lua_tonumber(L, 3);
+            int32_t y2 = (int32_t)lua_tonumber(L, 4);
+
+            int32_t x3 = (int32_t)lua_tonumber(L, 5);
+            int32_t y3 = (int32_t)lua_tonumber(L, 6);
+
+            auto pixel = GetPixelFromLuaStack(L, 7);
+
+            instance->FillTriangle(x1, y1, x2, y2, x3, y3, pixel);
 
             return 0;
         }
@@ -607,7 +686,11 @@ namespace PGEApp
             auto sprite = (olc::Sprite *)lua_topointer(L, 3);
             assert(sprite);
 
-            instance->DrawSprite(x, y, sprite);
+            uint32_t scale = 1;
+            if (lua_gettop(L) >= 4)
+                scale = (uint32_t)lua_tointeger(L, 4);
+
+            instance->DrawSprite(x, y, sprite, scale);
 
             return 0;
         }
@@ -628,7 +711,30 @@ namespace PGEApp
             int32_t width = (int32_t)lua_tonumber(L, 6);
             int32_t height = (int32_t)lua_tonumber(L, 7);
 
-            instance->DrawPartialSprite(x, y, sprite, xOffset, yOffset, width, height);
+            uint32_t scale = 1;
+            if (lua_gettop(L) >= 8)
+                scale = (uint32_t)lua_tointeger(L, 8);
+
+            instance->DrawPartialSprite(x, y, sprite, xOffset, yOffset, width, height, scale);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_DrawString)
+        {
+            // TODO: Check arguments count
+
+            int32_t x = (int32_t)lua_tonumber(L, 1);
+            int32_t y = (int32_t)lua_tonumber(L, 2);
+
+            auto text = std::string(lua_tostring(L, 3));
+            auto pixel = GetPixelFromLuaStack(L, 4);
+
+            uint32_t scale = 1;
+            if (lua_gettop(L) >= 5)
+                scale = (uint32_t)lua_tointeger(L, 5);
+
+            instance->DrawString(x, y, text, pixel, scale);
 
             return 0;
         }
@@ -666,7 +772,7 @@ namespace PGEApp
             float xScale = (float)lua_tonumber(L, 7);
             float yScale = (float)lua_tonumber(L, 8);
 
-            auto tint = GetPixelFromLuaStack(L, 9, true);
+            auto tint = GetPixelFromLuaStack(L, 9);
 
             instance->DrawRotatedDecal({x, y}, decal, angle, {xCenter, yCenter}, {xScale, yScale}, tint);
 
@@ -710,9 +816,14 @@ namespace PGEApp
 
             {"clear", Graphics_Clear},
 
+            {"draw", Graphics_Draw},
             {"draw_line", Graphics_DrawLine},
-            {"fill_rect", Graphics_FillRect},
+            {"draw_circle", Graphics_DrawCircle},
             {"fill_circle", Graphics_FillCircle},
+            {"draw_rect", Graphics_DrawRect},
+            {"fill_rect", Graphics_FillRect},
+            {"draw_triangle", Graphics_DrawTriangle},
+            {"fill_triangle", Graphics_FillTriangle},
 
             {"load_sprite", Graphics_LoadSprite},
             {"unload_sprite", Graphics_UnloadSprite},
@@ -723,6 +834,8 @@ namespace PGEApp
             {"draw_partial_sprite", Graphics_DrawPartialSprite},
             {"draw_decal", Graphics_DrawDecal},
             {"draw_rotated_decal", Graphics_DrawRotatedDecal},
+
+            {"draw_string", Graphics_DrawString},
 
             {NULL, NULL}};
 
