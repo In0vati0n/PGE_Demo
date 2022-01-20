@@ -13,11 +13,11 @@ local i = PGE.input
 
 local bat_pos = 20
 local bat_width = 40
-local bat_speed = 250
+local bat_speed = 25
 
 local ball_pos = {x = 0, y = 0}
 local ball_dir = {x = 0, y = 0}
-local ball_speed = 40
+local ball_speed = 20
 local ball_radius = 5
 
 local block_size = {w = 16, h = 16}
@@ -32,18 +32,20 @@ function load()
 
     for y = 1, 30 do
         for x = 1, 24 do
+            local idx = (y - 1) * 24 + x
+
             if x == 1 or y == 1 or x == 24 then
-                blocks[(y - 1) * 24 + x] = 10
+                blocks[idx] = 10
             else
-                blocks[(y - 1) * 24 + x] = 0
+                blocks[idx] = 0
             end
 
             if x > 3 and x <= 21 and y > 4 and y <= 6 then
-                blocks[(y - 1) * 24 + x] = 1
+                blocks[idx] = 1
             elseif x > 3 and x <= 21 and y > 6 and y <= 8 then
-                blocks[(y - 1) * 24 + x] = 2
+                blocks[idx] = 2
             elseif x > 3 and x <= 21 and y > 8 and y <= 10 then
-                blocks[(y - 1) * 24 + x] = 3
+                blocks[idx] = 3
             end
         end
     end
