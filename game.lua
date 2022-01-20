@@ -29,6 +29,8 @@ local list_fragments = {}
 
 function load()
     print("Version: " .. PGE.MajorVersion .. "." .. PGE.MinorVersion)
+    print("  Screen width " .. PGE.window.screen_width())
+    print("  Screen height " .. PGE.window.screen_height())
 
     for y = 1, 30 do
         for x = 1, 24 do

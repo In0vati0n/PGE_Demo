@@ -71,6 +71,7 @@ namespace PGEApp
         }
 
         static int TimerRegisterFunctions(lua_State *L);
+        static int WindowRegisterFunctions(lua_State *L);
         static int GraphicsRegisterFunctions(lua_State *L);
         static int InputRegisterFunctions(lua_State *L);
 
@@ -124,13 +125,19 @@ namespace PGEApp
             inline float GetDeltaTime() const { return DeltaTime; }
 
         private:
-            bool InitLuaTimer()
+            bool InitTimerModule()
             {
                 TimerRegisterFunctions(L);
                 return true;
             }
 
-            bool InitLuaGraphics()
+            bool InitWindowModule()
+            {
+                WindowRegisterFunctions(L);
+                return true;
+            }
+
+            bool InitGraphicsModule()
             {
                 GraphicsRegisterFunctions(L);
 
@@ -164,7 +171,7 @@ namespace PGEApp
                 return true;
             }
 
-            bool InitLuaInput()
+            bool InitInputModule()
             {
                 InputRegisterFunctions(L);
 
@@ -296,11 +303,12 @@ namespace PGEApp
                 return true;
             }
 
-            bool InitLuaLibs()
+            bool InitModules()
             {
-                InitLuaTimer();
-                InitLuaGraphics();
-                InitLuaInput();
+                InitTimerModule();
+                InitWindowModule();
+                InitGraphicsModule();
+                InitInputModule();
                 return true;
             }
 
@@ -335,7 +343,7 @@ namespace PGEApp
                     .endNamespace();
 
                 // init lua libs
-                InitLuaLibs();
+                InitModules();
 
                 // load pge engine lua code
                 luaL_dostring(L, "require('_pge')");
@@ -403,6 +411,38 @@ namespace PGEApp
         }
 
         ///////////////////////////////////////////////
+        // Window
+        ///////////////////////////////////////////////
+
+        DEFINE_LUA_FUNC(Window_ScreenWidth)
+        {
+            lua_pushinteger(L, instance->GetScreenWidth());
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Window_ScreenHeight)
+        {
+            lua_pushinteger(L, instance->GetScreenHeight());
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Window_IsFocused)
+        {
+            lua_pushboolean(L, instance->IsFocused());
+            return 1;
+        }
+
+        static const luaL_Reg WindowFunctions[] = {
+            {"screen_width", Window_ScreenWidth},
+            {"screen_height", Window_ScreenHeight},
+            {NULL, NULL}};
+
+        static int WindowRegisterFunctions(lua_State *L)
+        {
+            return RegisterLuaModule(L, "window", WindowFunctions);
+        }
+
+        ///////////////////////////////////////////////
         // Graphics
         ///////////////////////////////////////////////
 
@@ -419,16 +459,50 @@ namespace PGEApp
             }
             else
             {
-                uint8_t a = (uint8_t)lua_tointeger(L, top + 3);
+                uint8_t a = 255;
+                if (lua_gettop(L) >= top + 3)
+                    a = (uint8_t)lua_tointeger(L, top + 3);
+
                 return {r, g, b, a};
             }
+        }
+
+        DEFINE_LUA_FUNC(Graphics_SetDrawTarget)
+        {
+            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+            assert(sprite);
+
+            instance->SetDrawTarget(sprite);
+
+            return 0;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_GetDrawTargetWidth)
+        {
+            auto width = instance->GetDrawTargetWidth();
+            lua_pushinteger(L, (lua_Integer)width);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_GetDrawTargetHeight)
+        {
+            auto height = instance->GetDrawTargetHeight();
+            lua_pushinteger(L, (lua_Integer)height);
+            return 1;
+        }
+
+        DEFINE_LUA_FUNC(Graphics_GetDrawTarget)
+        {
+            auto sprite = instance->GetDrawTarget();
+            lua_pushlightuserdata(L, sprite);
+            return 1;
         }
 
         DEFINE_LUA_FUNC(Graphics_Clear)
         {
             // TODO: Check arguments count
 
-            auto pixel = GetPixelFromLuaStack(L, 1);
+            auto pixel = GetPixelFromLuaStack(L, 1, true);
             instance->Clear(pixel);
             return 0;
         }
@@ -481,18 +555,6 @@ namespace PGEApp
             instance->FillCircle(x, y, r, pixel);
 
             return 0;
-        }
-
-        DEFINE_LUA_FUNC(Graphics_ScreenWidth)
-        {
-            lua_pushinteger(L, instance->GetScreenWidth());
-            return 1;
-        }
-
-        DEFINE_LUA_FUNC(Graphics_ScreenHeight)
-        {
-            lua_pushinteger(L, instance->GetScreenHeight());
-            return 1;
         }
 
         DEFINE_LUA_FUNC(Graphics_LoadSprite)
@@ -611,6 +673,14 @@ namespace PGEApp
             return 0;
         }
 
+        DEFINE_LUA_FUNC(Graphics_SetPixelBlend)
+        {
+            float blend = (float)lua_tonumber(L, 1);
+            instance->SetPixelBlend(blend);
+
+            return 0;
+        }
+
         DEFINE_LUA_FUNC(Graphics_SetPixelMode)
         {
             olc::Pixel::Mode mode = (olc::Pixel::Mode)lua_tointeger(L, 1);
@@ -619,15 +689,30 @@ namespace PGEApp
             return 0;
         }
 
+        DEFINE_LUA_FUNC(Graphics_GetPixelMode)
+        {
+            auto mode = instance->GetPixelMode();
+
+            lua_pushinteger(L, (lua_Integer)mode);
+
+            return 1;
+        }
+
         static const luaL_Reg GraphicsFunctions[] = {
+            {"set_draw_target", Graphics_SetDrawTarget},
+            {"get_draw_target_width", Graphics_GetDrawTargetWidth},
+            {"get_draw_target_height", Graphics_GetDrawTargetHeight},
+            {"get_draw_target", Graphics_GetDrawTarget},
+
+            {"set_pixel_blend", Graphics_SetPixelBlend},
+            {"set_pixel_mode", Graphics_SetPixelMode},
+            {"get_pixel_mode", Graphics_GetPixelMode},
+
             {"clear", Graphics_Clear},
 
             {"draw_line", Graphics_DrawLine},
             {"fill_rect", Graphics_FillRect},
             {"fill_circle", Graphics_FillCircle},
-
-            {"screen_width", Graphics_ScreenWidth},
-            {"screen_height", Graphics_ScreenHeight},
 
             {"load_sprite", Graphics_LoadSprite},
             {"unload_sprite", Graphics_UnloadSprite},
@@ -638,8 +723,6 @@ namespace PGEApp
             {"draw_partial_sprite", Graphics_DrawPartialSprite},
             {"draw_decal", Graphics_DrawDecal},
             {"draw_rotated_decal", Graphics_DrawRotatedDecal},
-
-            {"set_pixel_mode", Graphics_SetPixelMode},
 
             {NULL, NULL}};
 
