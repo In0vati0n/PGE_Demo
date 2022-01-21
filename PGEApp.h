@@ -5,15 +5,18 @@
 #include <iostream>
 
 #define OLC_PGE_APPLICATION
+
 #include "olcPixelGameEngine.h"
 
 #if defined(BUILD_LUA_AS_CLIB)
 extern "C"
 {
 #endif
+
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+
 #if defined(BUILD_LUA_AS_CLIB)
 }
 #endif
@@ -29,7 +32,17 @@ namespace PGEApp
     namespace _
     {
         ///////////////////////////////////////////
-        // Utils
+        // Common Type Define
+        ///////////////////////////////////////////
+        using u8 = uint8_t;
+        using u16 = uint16_t;
+        using u32 = uint32_t;
+        using i8 = int8_t;
+        using i16 = int16_t;
+        using i32 = int32_t;
+
+        ///////////////////////////////////////////
+        // Common Utils
         ///////////////////////////////////////////
         static int Traceback(lua_State *L)
         {
@@ -70,14 +83,269 @@ namespace PGEApp
             return ret;
         }
 
-        static int TimerRegisterFunctions(lua_State *L);
-        static int WindowRegisterFunctions(lua_State *L);
-        static int GraphicsRegisterFunctions(lua_State *L);
-        static int InputRegisterFunctions(lua_State *L);
+        /////////////////////////////////////////////////
+        // Base Struct
+        /////////////////////////////////////////////////
+        enum KeyCode
+        {
+            NONE,
+            A,
+            B,
+            C,
+            D,
+            E,
+            F,
+            G,
+            H,
+            I,
+            J,
+            K,
+            L,
+            M,
+            N,
+            O,
+            P,
+            Q,
+            R,
+            S,
+            T,
+            U,
+            V,
+            W,
+            X,
+            Y,
+            Z,
+            K0,
+            K1,
+            K2,
+            K3,
+            K4,
+            K5,
+            K6,
+            K7,
+            K8,
+            K9,
+            F1,
+            F2,
+            F3,
+            F4,
+            F5,
+            F6,
+            F7,
+            F8,
+            F9,
+            F10,
+            F11,
+            F12,
+            UP,
+            DOWN,
+            LEFT,
+            RIGHT,
+            SPACE,
+            TAB,
+            SHIFT,
+            CTRL,
+            INS,
+            DEL,
+            HOME,
+            END,
+            PGUP,
+            PGDN,
+            BACK,
+            ESCAPE,
+            RETURN,
+            ENTER,
+            PAUSE,
+            SCROLL,
+            NP0,
+            NP1,
+            NP2,
+            NP3,
+            NP4,
+            NP5,
+            NP6,
+            NP7,
+            NP8,
+            NP9,
+            NP_MUL,
+            NP_DIV,
+            NP_ADD,
+            NP_SUB,
+            NP_DECIMAL,
+            PERIOD,
+            EQUALS,
+            COMMA,
+            MINUS,
+            OEM_1,
+            OEM_2,
+            OEM_3,
+            OEM_4,
+            OEM_5,
+            OEM_6,
+            OEM_7,
+            OEM_8,
+            CAPS_LOCK,
+            ENUM_END
+        };
+
+        struct Color
+        {
+            union
+            {
+                u32 _n{};
+                struct
+                {
+                    u8 r, g, b, a;
+                };
+            };
+
+            Color() : Color(0, 0, 0, 0) {}
+
+            Color(u8 r, u8 g, u8 b, u8 a) : r(r), g(g), b(b), a(a) {}
+
+            Color &operator=(const Color &c) = default;
+
+            inline bool operator==(const Color &c) const
+            {
+                return _n == c._n;
+            }
+
+            inline bool operator!=(const Color &c) const
+            {
+                return _n != c._n;
+            }
+
+            inline Color operator*(const float i) const
+            {
+                float fR = std::min(255.0f, std::max(0.0f, float(r) * i));
+                float fG = std::min(255.0f, std::max(0.0f, float(g) * i));
+                float fB = std::min(255.0f, std::max(0.0f, float(b) * i));
+                return {uint8_t(fR), uint8_t(fG), uint8_t(fB), a};
+            }
+
+            inline Color operator/(const float i) const
+            {
+                float fR = std::min(255.0f, std::max(0.0f, float(r) / i));
+                float fG = std::min(255.0f, std::max(0.0f, float(g) / i));
+                float fB = std::min(255.0f, std::max(0.0f, float(b) / i));
+                return {uint8_t(fR), uint8_t(fG), uint8_t(fB), a};
+            }
+
+            inline Color &operator*=(const float i)
+            {
+                this->r = uint8_t(std::min(255.0f, std::max(0.0f, float(r) * i)));
+                this->g = uint8_t(std::min(255.0f, std::max(0.0f, float(g) * i)));
+                this->b = uint8_t(std::min(255.0f, std::max(0.0f, float(b) * i)));
+                return *this;
+            }
+
+            inline Color &operator/=(const float i)
+            {
+                this->r = uint8_t(std::min(255.0f, std::max(0.0f, float(r) / i)));
+                this->g = uint8_t(std::min(255.0f, std::max(0.0f, float(g) / i)));
+                this->b = uint8_t(std::min(255.0f, std::max(0.0f, float(b) / i)));
+                return *this;
+            }
+
+            inline Color operator+(const Color &p) const
+            {
+                uint8_t nR = uint8_t(std::min(255, std::max(0, int(r) + int(p.r))));
+                uint8_t nG = uint8_t(std::min(255, std::max(0, int(g) + int(p.g))));
+                uint8_t nB = uint8_t(std::min(255, std::max(0, int(b) + int(p.b))));
+                return {nR, nG, nB, a};
+            }
+
+            inline Color operator-(const Color &p) const
+            {
+                uint8_t nR = uint8_t(std::min(255, std::max(0, int(r) - int(p.r))));
+                uint8_t nG = uint8_t(std::min(255, std::max(0, int(g) - int(p.g))));
+                uint8_t nB = uint8_t(std::min(255, std::max(0, int(b) - int(p.b))));
+                return {nR, nG, nB, a};
+            }
+
+            inline Color &operator+=(const Color &p)
+            {
+                this->r = uint8_t(std::min(255, std::max(0, int(r) + int(p.r))));
+                this->g = uint8_t(std::min(255, std::max(0, int(g) + int(p.g))));
+                this->b = uint8_t(std::min(255, std::max(0, int(b) + int(p.b))));
+                return *this;
+            }
+
+            inline Color &operator-=(const Color &p)
+            {
+                this->r = uint8_t(std::min(255, std::max(0, int(r) - int(p.r))));
+                this->g = uint8_t(std::min(255, std::max(0, int(g) - int(p.g))));
+                this->b = uint8_t(std::min(255, std::max(0, int(b) - int(p.b))));
+                return *this;
+            }
+        };
 
         /////////////////////////////////////////////////
-        // App
+        // Base App
         /////////////////////////////////////////////////
+        class Engine
+        {
+        public:
+            Engine() = default;
+
+            virtual ~Engine() = default;
+
+            virtual bool Start() = 0;
+
+        public:
+            /////////////////////////////////////////////////
+            // window
+            /////////////////////////////////////////////////
+            virtual int GetScreenWidth() = 0;
+
+            virtual int GetScreenHeight() = 0;
+
+            virtual int GetScreenXScale() = 0;
+
+            virtual int GetScreenYScale() = 0;
+
+            virtual bool IsFocus() = 0;
+
+            /////////////////////////////////////////////////
+            // draw
+            /////////////////////////////////////////////////
+            virtual void Clear(Color c) = 0;
+
+            virtual void Draw(i32 x, i32 y, Color c) = 0;
+
+            virtual void DrawLine(i32 x1, i32 y1, i32 x2, i32 y2, Color c) = 0;
+
+            virtual void DrawCircle(i32 x, i32 y, i32 r, Color c) = 0;
+
+            virtual void FillCircle(i32 x, i32 y, i32 r, Color c) = 0;
+
+            virtual void DrawRect(i32 x, i32 y, i32 w, i32 h, Color c) = 0;
+
+            virtual void FillRect(i32 x, i32 y, i32 w, i32 h, Color c) = 0;
+
+            virtual void DrawTriangle(i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, Color c) = 0;
+
+            virtual void FillTriangle(i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, Color c) = 0;
+
+        protected:
+            virtual bool OnInit() = 0;
+
+            virtual bool OnUpdate(float dt) = 0;
+
+            virtual bool OnDestroy() = 0;
+        };
+
+        /////////////////////////////////////////////////
+        // LuaEngine
+        /////////////////////////////////////////////////
+        static int TimerRegisterFunctions(lua_State *L);
+
+        static int WindowRegisterFunctions(lua_State *L);
+
+        static int GraphicsRegisterFunctions(lua_State *L);
+
+        static int InputRegisterFunctions(lua_State *L);
+
         class App : public olc::PixelGameEngine
         {
         public:
@@ -119,9 +387,13 @@ namespace PGEApp
             inline lua_State *GetLuaState() { return L; }
 
             inline int GetScreenWidth() const { return ScreenWidth; }
+
             inline int GetScreenHeight() const { return ScreenHeight; }
+
             inline int GetScreenXScale() const { return ScreenXScale; }
+
             inline int GetScreenYScale() const { return ScreenYScale; }
+
             inline float GetDeltaTime() const { return DeltaTime; }
 
         private:
@@ -322,7 +594,7 @@ namespace PGEApp
                     .addProperty("config", &config, false)
                     .endNamespace();
 
-                sAppName = (const char *)config["title"];
+                sAppName = std::string((const char *)config["title"]);
 
                 ScreenWidth = (int)config["screen_width"];
                 ScreenHeight = (int)config["screen_height"];
@@ -435,7 +707,8 @@ namespace PGEApp
         static const luaL_Reg WindowFunctions[] = {
             {"screen_width", Window_ScreenWidth},
             {"screen_height", Window_ScreenHeight},
-            {NULL, NULL}};
+            {"is_focus", Window_IsFocused},
+            {nullptr, nullptr}};
 
         static int WindowRegisterFunctions(lua_State *L)
         {
@@ -448,9 +721,9 @@ namespace PGEApp
 
         static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top)
         {
-            uint8_t r = (uint8_t)lua_tointeger(L, top + 0);
-            uint8_t g = (uint8_t)lua_tointeger(L, top + 1);
-            uint8_t b = (uint8_t)lua_tointeger(L, top + 2);
+            auto r = (uint8_t)lua_tointeger(L, top + 0);
+            auto g = (uint8_t)lua_tointeger(L, top + 1);
+            auto b = (uint8_t)lua_tointeger(L, top + 2);
 
             uint8_t a = 255;
             if (lua_gettop(L) >= top + 3)
