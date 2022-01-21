@@ -23,14 +23,12 @@ extern "C"
 
 #include "LuaBridge.h"
 
-namespace PGEApp
-{
+namespace PGEApp {
     static int MajorVersion = 0;
     static int MinorVersion = 1;
     const char *PGELuaTableName = "PGE";
 
-    namespace _
-    {
+    namespace _ {
         ///////////////////////////////////////////
         // Common Type Define
         ///////////////////////////////////////////
@@ -44,8 +42,7 @@ namespace PGEApp
         ///////////////////////////////////////////
         // Common Utils
         ///////////////////////////////////////////
-        static int Traceback(lua_State *L)
-        {
+        static int Traceback(lua_State *L) {
             lua_getglobal(L, "debug");
             lua_getfield(L, -1, "traceback");
             lua_pushvalue(L, 1);
@@ -54,14 +51,12 @@ namespace PGEApp
             return 1;
         }
 
-        static int CallLuaFunc(lua_State *L, const char *name)
-        {
+        static int CallLuaFunc(lua_State *L, const char *name) {
             lua_pushcfunction(L, Traceback);
             lua_getglobal(L, name);
 
             int ret = lua_pcall(L, 0, 0, lua_gettop(L) - 1);
-            if (ret != 0)
-            {
+            if (ret != 0) {
                 const char *error = lua_tostring(L, -1);
 
                 std::cout << "[Call Lua Error] " << error << std::endl;
@@ -74,11 +69,10 @@ namespace PGEApp
             return ret;
         }
 
-        static int LuaGetTableIntField(lua_State *L, const char *fieldName)
-        {
+        static int LuaGetTableIntField(lua_State *L, const char *fieldName) {
             int fieldType = lua_getfield(L, -1, fieldName);
             assert(fieldType == LUA_TNUMBER);
-            int ret = (int)lua_tointeger(L, -1);
+            int ret = (int) lua_tointeger(L, -1);
             lua_pop(L, 1);
             return ret;
         }
@@ -86,8 +80,7 @@ namespace PGEApp
         /////////////////////////////////////////////////
         // Base Struct
         /////////////////////////////////////////////////
-        enum KeyCode
-        {
+        enum KeyCode {
             NONE,
             A,
             B,
@@ -188,13 +181,10 @@ namespace PGEApp
             ENUM_END
         };
 
-        struct Color
-        {
-            union
-            {
+        struct Color {
+            union {
                 u32 _n{};
-                struct
-                {
+                struct {
                     u8 r, g, b, a;
                 };
             };
@@ -205,74 +195,64 @@ namespace PGEApp
 
             Color &operator=(const Color &c) = default;
 
-            inline bool operator==(const Color &c) const
-            {
+            inline bool operator==(const Color &c) const {
                 return _n == c._n;
             }
 
-            inline bool operator!=(const Color &c) const
-            {
+            inline bool operator!=(const Color &c) const {
                 return _n != c._n;
             }
 
-            inline Color operator*(const float i) const
-            {
+            inline Color operator*(const float i) const {
                 float fR = std::min(255.0f, std::max(0.0f, float(r) * i));
                 float fG = std::min(255.0f, std::max(0.0f, float(g) * i));
                 float fB = std::min(255.0f, std::max(0.0f, float(b) * i));
                 return {uint8_t(fR), uint8_t(fG), uint8_t(fB), a};
             }
 
-            inline Color operator/(const float i) const
-            {
+            inline Color operator/(const float i) const {
                 float fR = std::min(255.0f, std::max(0.0f, float(r) / i));
                 float fG = std::min(255.0f, std::max(0.0f, float(g) / i));
                 float fB = std::min(255.0f, std::max(0.0f, float(b) / i));
                 return {uint8_t(fR), uint8_t(fG), uint8_t(fB), a};
             }
 
-            inline Color &operator*=(const float i)
-            {
+            inline Color &operator*=(const float i) {
                 this->r = uint8_t(std::min(255.0f, std::max(0.0f, float(r) * i)));
                 this->g = uint8_t(std::min(255.0f, std::max(0.0f, float(g) * i)));
                 this->b = uint8_t(std::min(255.0f, std::max(0.0f, float(b) * i)));
                 return *this;
             }
 
-            inline Color &operator/=(const float i)
-            {
+            inline Color &operator/=(const float i) {
                 this->r = uint8_t(std::min(255.0f, std::max(0.0f, float(r) / i)));
                 this->g = uint8_t(std::min(255.0f, std::max(0.0f, float(g) / i)));
                 this->b = uint8_t(std::min(255.0f, std::max(0.0f, float(b) / i)));
                 return *this;
             }
 
-            inline Color operator+(const Color &p) const
-            {
+            inline Color operator+(const Color &p) const {
                 uint8_t nR = uint8_t(std::min(255, std::max(0, int(r) + int(p.r))));
                 uint8_t nG = uint8_t(std::min(255, std::max(0, int(g) + int(p.g))));
                 uint8_t nB = uint8_t(std::min(255, std::max(0, int(b) + int(p.b))));
                 return {nR, nG, nB, a};
             }
 
-            inline Color operator-(const Color &p) const
-            {
+            inline Color operator-(const Color &p) const {
                 uint8_t nR = uint8_t(std::min(255, std::max(0, int(r) - int(p.r))));
                 uint8_t nG = uint8_t(std::min(255, std::max(0, int(g) - int(p.g))));
                 uint8_t nB = uint8_t(std::min(255, std::max(0, int(b) - int(p.b))));
                 return {nR, nG, nB, a};
             }
 
-            inline Color &operator+=(const Color &p)
-            {
+            inline Color &operator+=(const Color &p) {
                 this->r = uint8_t(std::min(255, std::max(0, int(r) + int(p.r))));
                 this->g = uint8_t(std::min(255, std::max(0, int(g) + int(p.g))));
                 this->b = uint8_t(std::min(255, std::max(0, int(b) + int(p.b))));
                 return *this;
             }
 
-            inline Color &operator-=(const Color &p)
-            {
+            inline Color &operator-=(const Color &p) {
                 this->r = uint8_t(std::min(255, std::max(0, int(r) - int(p.r))));
                 this->g = uint8_t(std::min(255, std::max(0, int(g) - int(p.g))));
                 this->b = uint8_t(std::min(255, std::max(0, int(b) - int(p.b))));
@@ -280,35 +260,16 @@ namespace PGEApp
             }
         };
 
-        /////////////////////////////////////////////////
-        // Base App
-        /////////////////////////////////////////////////
-        class Engine
-        {
+        // forward declaration
+        class Drawable;
+
+        class Graphics {
         public:
-            Engine() = default;
+            Graphics() = default;
 
-            virtual ~Engine() = default;
-
-            virtual bool Start() = 0;
+            virtual ~Graphics() = default;
 
         public:
-            /////////////////////////////////////////////////
-            // window
-            /////////////////////////////////////////////////
-            virtual int GetScreenWidth() = 0;
-
-            virtual int GetScreenHeight() = 0;
-
-            virtual int GetScreenXScale() = 0;
-
-            virtual int GetScreenYScale() = 0;
-
-            virtual bool IsFocus() = 0;
-
-            /////////////////////////////////////////////////
-            // draw
-            /////////////////////////////////////////////////
             virtual void Clear(Color c) = 0;
 
             virtual void Draw(i32 x, i32 y, Color c) = 0;
@@ -327,12 +288,130 @@ namespace PGEApp
 
             virtual void FillTriangle(i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, Color c) = 0;
 
+            virtual void Draw(std::shared_ptr<Drawable> drawable) = 0;
+        };
+
+        class Drawable {
+        public:
+            Drawable() = default;
+
+            virtual ~Drawable() = default;
+
+            virtual void Draw(Graphics *gfx) = 0;
+        };
+
+        class Sprite : public Drawable {
+        };
+
+        /////////////////////////////////////////////////
+        // Base App
+        /////////////////////////////////////////////////
+        class Engine {
+        public:
+            Engine() = default;
+
+            virtual ~Engine() = default;
+
+            bool Init() {
+                _gfx = OnCreateGfx();
+                return OnInit();
+            }
+
+            bool Update(float dt) {
+                return OnUpdate(dt);
+            }
+
+            bool Destroy() {
+                return OnDestroy();
+            }
+
+        public:
+            /////////////////////////////////////////////////
+            // window
+            /////////////////////////////////////////////////
+            virtual int GetScreenWidth() = 0;
+
+            virtual int GetScreenHeight() = 0;
+
+            virtual int GetScreenXScale() = 0;
+
+            virtual int GetScreenYScale() = 0;
+
+            virtual bool IsFocus() = 0;
+
+            /////////////////////////////////////////////////
+            // draw
+            /////////////////////////////////////////////////
+            void Clear(Color c) { _gfx->Clear(c); }
+
+            void Draw(i32 x, i32 y, Color c) {
+                _gfx->Draw(x, y, c);
+            }
+
+            void DrawLine(i32 x1, i32 y1, i32 x2, i32 y2, Color c) {
+                _gfx->DrawLine(x1, y1, x2, y2, c);
+            }
+
+            void DrawCircle(i32 x, i32 y, i32 r, Color c) {
+                _gfx->DrawCircle(x, y, r, c);
+            }
+
+            void FillCircle(i32 x, i32 y, i32 r, Color c) {
+                _gfx->FillCircle(x, y, r, c);
+            }
+
+            void DrawRect(i32 x, i32 y, i32 w, i32 h, Color c) {
+                _gfx->DrawRect(x, y, w, h, c);
+            }
+
+            void FillRect(i32 x, i32 y, i32 w, i32 h, Color c) {
+                _gfx->FillRect(x, y, w, h, c);
+            }
+
+            void DrawTriangle(i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, Color c) {
+                _gfx->DrawTriangle(x1, y1, x2, y2, x3, y3, c);
+            }
+
+            void FillTriangle(i32 x1, i32 y1, i32 x2, i32 y2, i32 x3, i32 y3, Color c) {
+                _gfx->FillTriangle(x1, y1, x2, y2, x3, y3, c);
+            }
+
+            void Draw(std::shared_ptr<Drawable> drawable) {
+                _gfx->Draw(drawable);
+            }
+
+            /////////////////////////////////////////////////
+            // input
+            /////////////////////////////////////////////////
+            virtual bool IsKeyPressed(KeyCode code) = 0;
+
+            virtual bool IsKeyHeld(KeyCode code) = 0;
+
+            virtual bool IsKeyReleased(KeyCode code) = 0;
+
+            virtual bool IsMousePressed(int button) = 0;
+
+            virtual bool IsMouseHeld(int button) = 0;
+
+            virtual bool IsMouseReleased(int button) = 0;
+
+            virtual float GetMouseX() = 0;
+
+            virtual float GetMouseY() = 0;
+
+            virtual float GetMouseWheel() = 0;
+
         protected:
             virtual bool OnInit() = 0;
+
+            virtual std::unique_ptr<Graphics> OnCreateGfx() = 0;
 
             virtual bool OnUpdate(float dt) = 0;
 
             virtual bool OnDestroy() = 0;
+
+        protected:
+            std::unique_ptr<Graphics> _gfx;
         };
 
         /////////////////////////////////////////////////
@@ -346,40 +425,34 @@ namespace PGEApp
 
         static int InputRegisterFunctions(lua_State *L);
 
-        class App : public olc::PixelGameEngine
-        {
+        class App : public olc::PixelGameEngine {
         public:
-            App()
-            {
+            App() {
                 sAppName = "App";
 
                 L = luaL_newstate();
                 InitLua();
             }
 
-            virtual ~App()
-            {
+            virtual ~App() {
                 lua_close(L);
                 L = nullptr;
             }
 
         public:
-            bool OnUserCreate() override
-            {
+            bool OnUserCreate() override {
                 CallLuaFunc(L, "_pge_load");
                 return true;
             }
 
-            bool OnUserUpdate(float fElapsedTime) override
-            {
+            bool OnUserUpdate(float fElapsedTime) override {
                 DeltaTime = fElapsedTime;
                 CallLuaFunc(L, "_pge_update");
 
                 return true;
             }
 
-            bool OnUserDestroy() override
-            {
+            bool OnUserDestroy() override {
                 CallLuaFunc(L, "_pge_on_destroy");
                 return true;
             }
@@ -397,27 +470,24 @@ namespace PGEApp
             inline float GetDeltaTime() const { return DeltaTime; }
 
         private:
-            bool InitTimerModule()
-            {
+            bool InitTimerModule() {
                 TimerRegisterFunctions(L);
                 return true;
             }
 
-            bool InitWindowModule()
-            {
+            bool InitWindowModule() {
                 WindowRegisterFunctions(L);
                 return true;
             }
 
-            bool InitGraphicsModule()
-            {
+            bool InitGraphicsModule() {
                 GraphicsRegisterFunctions(L);
 
                 luabridge::getGlobalNamespace(L)
-                    .beginNamespace(PGELuaTableName)
-                    .beginNamespace("graphics")
-                    .endNamespace()
-                    .endNamespace();
+                        .beginNamespace(PGELuaTableName)
+                        .beginNamespace("graphics")
+                        .endNamespace()
+                        .endNamespace();
 
                 lua_getglobal(L, PGELuaTableName);
                 lua_getfield(L, -1, "graphics");
@@ -443,15 +513,14 @@ namespace PGEApp
                 return true;
             }
 
-            bool InitInputModule()
-            {
+            bool InitInputModule() {
                 InputRegisterFunctions(L);
 
                 luabridge::getGlobalNamespace(L)
-                    .beginNamespace(PGELuaTableName)
-                    .beginNamespace("input")
-                    .endNamespace()
-                    .endNamespace();
+                        .beginNamespace(PGELuaTableName)
+                        .beginNamespace("input")
+                        .endNamespace()
+                        .endNamespace();
 
                 lua_getglobal(L, PGELuaTableName);
                 lua_getfield(L, -1, "input");
@@ -575,8 +644,7 @@ namespace PGEApp
                 return true;
             }
 
-            bool InitModules()
-            {
+            bool InitModules() {
                 InitTimerModule();
                 InitWindowModule();
                 InitGraphicsModule();
@@ -584,35 +652,33 @@ namespace PGEApp
                 return true;
             }
 
-            bool InitConfig()
-            {
+            bool InitConfig() {
                 auto luaConfigFunc = luabridge::getGlobal(L, "_pge_config");
                 auto config = luaConfigFunc()[0];
 
                 luabridge::getGlobalNamespace(L)
-                    .beginNamespace(PGELuaTableName)
-                    .addProperty("config", &config, false)
-                    .endNamespace();
+                        .beginNamespace(PGELuaTableName)
+                        .addProperty("config", &config, false)
+                        .endNamespace();
 
-                sAppName = std::string((const char *)config["title"]);
+                sAppName = std::string((const char *) config["title"]);
 
-                ScreenWidth = (int)config["screen_width"];
-                ScreenHeight = (int)config["screen_height"];
-                ScreenXScale = (int)config["screen_x_scale"];
-                ScreenYScale = (int)config["screen_y_scale"];
+                ScreenWidth = (int) config["screen_width"];
+                ScreenHeight = (int) config["screen_height"];
+                ScreenXScale = (int) config["screen_x_scale"];
+                ScreenYScale = (int) config["screen_y_scale"];
 
                 return true;
             }
 
-            bool InitLua()
-            {
+            bool InitLua() {
                 luaL_openlibs(L);
 
                 luabridge::getGlobalNamespace(L)
-                    .beginNamespace(PGELuaTableName)
-                    .addProperty("MajorVersion", &MajorVersion, false)
-                    .addProperty("MinorVersion", &MinorVersion, false)
-                    .endNamespace();
+                        .beginNamespace(PGELuaTableName)
+                        .addProperty("MajorVersion", &MajorVersion, false)
+                        .addProperty("MinorVersion", &MinorVersion, false)
+                        .endNamespace();
 
                 // init lua libs
                 InitModules();
@@ -648,17 +714,16 @@ namespace PGEApp
 #define DEFINE_LUA_FUNC(name) \
     static int name(lua_State *L)
 
-        static int RegisterLuaModule(lua_State *L, const char *moduleName, const luaL_Reg functions[])
-        {
+        static int RegisterLuaModule(lua_State *L, const char *moduleName, const luaL_Reg functions[]) {
             auto ns = luabridge::getGlobalNamespace(L)
-                          .beginNamespace(PGELuaTableName)
-                          .beginNamespace(moduleName);
+                    .beginNamespace(PGELuaTableName)
+                    .beginNamespace(moduleName);
 
             for (const luaL_Reg *reg = functions; reg->func; reg++)
                 ns.addFunction(reg->name, reg->func);
 
             ns.endNamespace()
-                .endNamespace();
+                    .endNamespace();
 
             return 0;
         }
@@ -667,18 +732,16 @@ namespace PGEApp
         // Timer
         ///////////////////////////////////////////////
 
-        DEFINE_LUA_FUNC(Timer_GetDeltaTime)
-        {
+        DEFINE_LUA_FUNC(Timer_GetDeltaTime) {
             lua_pushnumber(L, instance->GetDeltaTime());
             return 1;
         }
 
         static const luaL_Reg TimerFunctions[] = {
-            {"get_delta_time", Timer_GetDeltaTime},
-            {NULL, NULL}};
+                {"get_delta_time", Timer_GetDeltaTime},
+                {NULL, NULL}};
 
-        static int TimerRegisterFunctions(lua_State *L)
-        {
+        static int TimerRegisterFunctions(lua_State *L) {
             return RegisterLuaModule(L, "timer", TimerFunctions);
         }
 
@@ -686,32 +749,28 @@ namespace PGEApp
         // Window
         ///////////////////////////////////////////////
 
-        DEFINE_LUA_FUNC(Window_ScreenWidth)
-        {
+        DEFINE_LUA_FUNC(Window_ScreenWidth) {
             lua_pushinteger(L, instance->GetScreenWidth());
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Window_ScreenHeight)
-        {
+        DEFINE_LUA_FUNC(Window_ScreenHeight) {
             lua_pushinteger(L, instance->GetScreenHeight());
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Window_IsFocused)
-        {
+        DEFINE_LUA_FUNC(Window_IsFocused) {
             lua_pushboolean(L, instance->IsFocused());
             return 1;
         }
 
         static const luaL_Reg WindowFunctions[] = {
-            {"screen_width", Window_ScreenWidth},
-            {"screen_height", Window_ScreenHeight},
-            {"is_focus", Window_IsFocused},
-            {nullptr, nullptr}};
+                {"screen_width",  Window_ScreenWidth},
+                {"screen_height", Window_ScreenHeight},
+                {"is_focus",      Window_IsFocused},
+                {nullptr,         nullptr}};
 
-        static int WindowRegisterFunctions(lua_State *L)
-        {
+        static int WindowRegisterFunctions(lua_State *L) {
             return RegisterLuaModule(L, "window", WindowFunctions);
         }
 
@@ -719,22 +778,20 @@ namespace PGEApp
         // Graphics
         ///////////////////////////////////////////////
 
-        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top)
-        {
-            auto r = (uint8_t)lua_tointeger(L, top + 0);
-            auto g = (uint8_t)lua_tointeger(L, top + 1);
-            auto b = (uint8_t)lua_tointeger(L, top + 2);
+        static olc::Pixel GetPixelFromLuaStack(lua_State *L, int top) {
+            auto r = (uint8_t) lua_tointeger(L, top + 0);
+            auto g = (uint8_t) lua_tointeger(L, top + 1);
+            auto b = (uint8_t) lua_tointeger(L, top + 2);
 
             uint8_t a = 255;
             if (lua_gettop(L) >= top + 3)
-                a = (uint8_t)lua_tointeger(L, top + 3);
+                a = (uint8_t) lua_tointeger(L, top + 3);
 
             return {r, g, b, a};
         }
 
-        DEFINE_LUA_FUNC(Graphics_SetDrawTarget)
-        {
-            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+        DEFINE_LUA_FUNC(Graphics_SetDrawTarget) {
+            auto sprite = (olc::Sprite *) lua_topointer(L, 1);
             assert(sprite);
 
             instance->SetDrawTarget(sprite);
@@ -742,29 +799,25 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_GetDrawTargetWidth)
-        {
+        DEFINE_LUA_FUNC(Graphics_GetDrawTargetWidth) {
             auto width = instance->GetDrawTargetWidth();
-            lua_pushinteger(L, (lua_Integer)width);
+            lua_pushinteger(L, (lua_Integer) width);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Graphics_GetDrawTargetHeight)
-        {
+        DEFINE_LUA_FUNC(Graphics_GetDrawTargetHeight) {
             auto height = instance->GetDrawTargetHeight();
-            lua_pushinteger(L, (lua_Integer)height);
+            lua_pushinteger(L, (lua_Integer) height);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Graphics_GetDrawTarget)
-        {
+        DEFINE_LUA_FUNC(Graphics_GetDrawTarget) {
             auto sprite = instance->GetDrawTarget();
             lua_pushlightuserdata(L, sprite);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Graphics_Clear)
-        {
+        DEFINE_LUA_FUNC(Graphics_Clear) {
             // TODO: Check arguments count
 
             auto pixel = GetPixelFromLuaStack(L, 1);
@@ -772,12 +825,11 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_Draw)
-        {
+        DEFINE_LUA_FUNC(Graphics_Draw) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
             auto pixel = GetPixelFromLuaStack(L, 3);
 
@@ -786,15 +838,14 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawLine)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawLine) {
             // TODO: Check arguments count
 
-            int32_t x1 = (int32_t)lua_tonumber(L, 1);
-            int32_t y1 = (int32_t)lua_tonumber(L, 2);
+            int32_t x1 = (int32_t) lua_tonumber(L, 1);
+            int32_t y1 = (int32_t) lua_tonumber(L, 2);
 
-            int32_t x2 = (int32_t)lua_tonumber(L, 3);
-            int32_t y2 = (int32_t)lua_tonumber(L, 4);
+            int32_t x2 = (int32_t) lua_tonumber(L, 3);
+            int32_t y2 = (int32_t) lua_tonumber(L, 4);
 
             auto pixel = GetPixelFromLuaStack(L, 5);
 
@@ -803,14 +854,13 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawCircle)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawCircle) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            int32_t r = (int32_t)lua_tonumber(L, 3);
+            int32_t r = (int32_t) lua_tonumber(L, 3);
 
             auto pixel = GetPixelFromLuaStack(L, 4);
 
@@ -819,14 +869,13 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_FillCircle)
-        {
+        DEFINE_LUA_FUNC(Graphics_FillCircle) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            int32_t r = (int32_t)lua_tonumber(L, 3);
+            int32_t r = (int32_t) lua_tonumber(L, 3);
 
             auto pixel = GetPixelFromLuaStack(L, 4);
 
@@ -835,15 +884,14 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawRect)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawRect) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            int32_t w = (int32_t)lua_tonumber(L, 3);
-            int32_t h = (int32_t)lua_tonumber(L, 4);
+            int32_t w = (int32_t) lua_tonumber(L, 3);
+            int32_t h = (int32_t) lua_tonumber(L, 4);
 
             auto pixel = GetPixelFromLuaStack(L, 5);
 
@@ -852,15 +900,14 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_FillRect)
-        {
+        DEFINE_LUA_FUNC(Graphics_FillRect) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            int32_t w = (int32_t)lua_tonumber(L, 3);
-            int32_t h = (int32_t)lua_tonumber(L, 4);
+            int32_t w = (int32_t) lua_tonumber(L, 3);
+            int32_t h = (int32_t) lua_tonumber(L, 4);
 
             auto pixel = GetPixelFromLuaStack(L, 5);
 
@@ -869,18 +916,17 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawTriangle)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawTriangle) {
             // TODO: Check arguments count
 
-            int32_t x1 = (int32_t)lua_tonumber(L, 1);
-            int32_t y1 = (int32_t)lua_tonumber(L, 2);
+            int32_t x1 = (int32_t) lua_tonumber(L, 1);
+            int32_t y1 = (int32_t) lua_tonumber(L, 2);
 
-            int32_t x2 = (int32_t)lua_tonumber(L, 3);
-            int32_t y2 = (int32_t)lua_tonumber(L, 4);
+            int32_t x2 = (int32_t) lua_tonumber(L, 3);
+            int32_t y2 = (int32_t) lua_tonumber(L, 4);
 
-            int32_t x3 = (int32_t)lua_tonumber(L, 5);
-            int32_t y3 = (int32_t)lua_tonumber(L, 6);
+            int32_t x3 = (int32_t) lua_tonumber(L, 5);
+            int32_t y3 = (int32_t) lua_tonumber(L, 6);
 
             auto pixel = GetPixelFromLuaStack(L, 7);
 
@@ -889,18 +935,17 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_FillTriangle)
-        {
+        DEFINE_LUA_FUNC(Graphics_FillTriangle) {
             // TODO: Check arguments count
 
-            int32_t x1 = (int32_t)lua_tonumber(L, 1);
-            int32_t y1 = (int32_t)lua_tonumber(L, 2);
+            int32_t x1 = (int32_t) lua_tonumber(L, 1);
+            int32_t y1 = (int32_t) lua_tonumber(L, 2);
 
-            int32_t x2 = (int32_t)lua_tonumber(L, 3);
-            int32_t y2 = (int32_t)lua_tonumber(L, 4);
+            int32_t x2 = (int32_t) lua_tonumber(L, 3);
+            int32_t y2 = (int32_t) lua_tonumber(L, 4);
 
-            int32_t x3 = (int32_t)lua_tonumber(L, 5);
-            int32_t y3 = (int32_t)lua_tonumber(L, 6);
+            int32_t x3 = (int32_t) lua_tonumber(L, 5);
+            int32_t y3 = (int32_t) lua_tonumber(L, 6);
 
             auto pixel = GetPixelFromLuaStack(L, 7);
 
@@ -909,8 +954,7 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_LoadSprite)
-        {
+        DEFINE_LUA_FUNC(Graphics_LoadSprite) {
             auto path = lua_tostring(L, 1);
 
             auto sprite = new olc::Sprite(std::string(path));
@@ -920,17 +964,15 @@ namespace PGEApp
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Graphics_UnloadSprite)
-        {
-            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+        DEFINE_LUA_FUNC(Graphics_UnloadSprite) {
+            auto sprite = (olc::Sprite *) lua_topointer(L, 1);
             assert(sprite);
             delete sprite;
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_CreateDecal)
-        {
-            auto sprite = (olc::Sprite *)lua_topointer(L, 1);
+        DEFINE_LUA_FUNC(Graphics_CreateDecal) {
+            auto sprite = (olc::Sprite *) lua_topointer(L, 1);
             assert(sprite);
 
             auto decal = new olc::Decal(sprite);
@@ -941,85 +983,80 @@ namespace PGEApp
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DestroyDecal)
-        {
-            auto decal = (olc::Decal *)lua_topointer(L, 1);
+        DEFINE_LUA_FUNC(Graphics_DestroyDecal) {
+            auto decal = (olc::Decal *) lua_topointer(L, 1);
             assert(decal);
             delete decal;
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawSprite)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawSprite) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            auto sprite = (olc::Sprite *)lua_topointer(L, 3);
+            auto sprite = (olc::Sprite *) lua_topointer(L, 3);
             assert(sprite);
 
             uint32_t scale = 1;
             if (lua_gettop(L) >= 4)
-                scale = (uint32_t)lua_tointeger(L, 4);
+                scale = (uint32_t) lua_tointeger(L, 4);
 
             instance->DrawSprite(x, y, sprite, scale);
 
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawPartialSprite)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawPartialSprite) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
-            auto sprite = (olc::Sprite *)lua_topointer(L, 3);
+            auto sprite = (olc::Sprite *) lua_topointer(L, 3);
             assert(sprite);
 
-            int32_t xOffset = (int32_t)lua_tonumber(L, 4);
-            int32_t yOffset = (int32_t)lua_tonumber(L, 5);
+            int32_t xOffset = (int32_t) lua_tonumber(L, 4);
+            int32_t yOffset = (int32_t) lua_tonumber(L, 5);
 
-            int32_t width = (int32_t)lua_tonumber(L, 6);
-            int32_t height = (int32_t)lua_tonumber(L, 7);
+            int32_t width = (int32_t) lua_tonumber(L, 6);
+            int32_t height = (int32_t) lua_tonumber(L, 7);
 
             uint32_t scale = 1;
             if (lua_gettop(L) >= 8)
-                scale = (uint32_t)lua_tointeger(L, 8);
+                scale = (uint32_t) lua_tointeger(L, 8);
 
             instance->DrawPartialSprite(x, y, sprite, xOffset, yOffset, width, height, scale);
 
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawString)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawString) {
             // TODO: Check arguments count
 
-            int32_t x = (int32_t)lua_tonumber(L, 1);
-            int32_t y = (int32_t)lua_tonumber(L, 2);
+            int32_t x = (int32_t) lua_tonumber(L, 1);
+            int32_t y = (int32_t) lua_tonumber(L, 2);
 
             auto text = std::string(lua_tostring(L, 3));
             auto pixel = GetPixelFromLuaStack(L, 4);
 
             uint32_t scale = 1;
             if (lua_gettop(L) >= 5)
-                scale = (uint32_t)lua_tointeger(L, 5);
+                scale = (uint32_t) lua_tointeger(L, 5);
 
             instance->DrawString(x, y, text, pixel, scale);
 
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawDecal)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawDecal) {
             // TODO: Check arguments count
 
-            float x = (float)lua_tonumber(L, 1);
-            float y = (float)lua_tonumber(L, 2);
+            float x = (float) lua_tonumber(L, 1);
+            float y = (float) lua_tonumber(L, 2);
 
-            auto decal = (olc::Decal *)lua_topointer(L, 3);
+            auto decal = (olc::Decal *) lua_topointer(L, 3);
             assert(decal);
 
             instance->DrawDecal({x, y}, decal);
@@ -1027,23 +1064,22 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_DrawRotatedDecal)
-        {
+        DEFINE_LUA_FUNC(Graphics_DrawRotatedDecal) {
             // TODO: Check arguments count
 
-            float x = (float)lua_tonumber(L, 1);
-            float y = (float)lua_tonumber(L, 2);
+            float x = (float) lua_tonumber(L, 1);
+            float y = (float) lua_tonumber(L, 2);
 
-            auto decal = (olc::Decal *)lua_topointer(L, 3);
+            auto decal = (olc::Decal *) lua_topointer(L, 3);
             // assert(decal);
 
-            float angle = (float)lua_tonumber(L, 4);
+            float angle = (float) lua_tonumber(L, 4);
 
-            float xCenter = (float)lua_tonumber(L, 5);
-            float yCenter = (float)lua_tonumber(L, 6);
+            float xCenter = (float) lua_tonumber(L, 5);
+            float yCenter = (float) lua_tonumber(L, 6);
 
-            float xScale = (float)lua_tonumber(L, 7);
-            float yScale = (float)lua_tonumber(L, 8);
+            float xScale = (float) lua_tonumber(L, 7);
+            float yScale = (float) lua_tonumber(L, 8);
 
             auto tint = GetPixelFromLuaStack(L, 9);
 
@@ -1052,68 +1088,64 @@ namespace PGEApp
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_SetPixelBlend)
-        {
-            float blend = (float)lua_tonumber(L, 1);
+        DEFINE_LUA_FUNC(Graphics_SetPixelBlend) {
+            float blend = (float) lua_tonumber(L, 1);
             instance->SetPixelBlend(blend);
 
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_SetPixelMode)
-        {
-            olc::Pixel::Mode mode = (olc::Pixel::Mode)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Graphics_SetPixelMode) {
+            olc::Pixel::Mode mode = (olc::Pixel::Mode) lua_tointeger(L, 1);
             instance->SetPixelMode(mode);
 
             return 0;
         }
 
-        DEFINE_LUA_FUNC(Graphics_GetPixelMode)
-        {
+        DEFINE_LUA_FUNC(Graphics_GetPixelMode) {
             auto mode = instance->GetPixelMode();
 
-            lua_pushinteger(L, (lua_Integer)mode);
+            lua_pushinteger(L, (lua_Integer) mode);
 
             return 1;
         }
 
         static const luaL_Reg GraphicsFunctions[] = {
-            {"set_draw_target", Graphics_SetDrawTarget},
-            {"get_draw_target_width", Graphics_GetDrawTargetWidth},
-            {"get_draw_target_height", Graphics_GetDrawTargetHeight},
-            {"get_draw_target", Graphics_GetDrawTarget},
+                {"set_draw_target",        Graphics_SetDrawTarget},
+                {"get_draw_target_width",  Graphics_GetDrawTargetWidth},
+                {"get_draw_target_height", Graphics_GetDrawTargetHeight},
+                {"get_draw_target",        Graphics_GetDrawTarget},
 
-            {"set_pixel_blend", Graphics_SetPixelBlend},
-            {"set_pixel_mode", Graphics_SetPixelMode},
-            {"get_pixel_mode", Graphics_GetPixelMode},
+                {"set_pixel_blend",        Graphics_SetPixelBlend},
+                {"set_pixel_mode",         Graphics_SetPixelMode},
+                {"get_pixel_mode",         Graphics_GetPixelMode},
 
-            {"clear", Graphics_Clear},
+                {"clear",                  Graphics_Clear},
 
-            {"draw", Graphics_Draw},
-            {"draw_line", Graphics_DrawLine},
-            {"draw_circle", Graphics_DrawCircle},
-            {"fill_circle", Graphics_FillCircle},
-            {"draw_rect", Graphics_DrawRect},
-            {"fill_rect", Graphics_FillRect},
-            {"draw_triangle", Graphics_DrawTriangle},
-            {"fill_triangle", Graphics_FillTriangle},
+                {"draw",                   Graphics_Draw},
+                {"draw_line",              Graphics_DrawLine},
+                {"draw_circle",            Graphics_DrawCircle},
+                {"fill_circle",            Graphics_FillCircle},
+                {"draw_rect",              Graphics_DrawRect},
+                {"fill_rect",              Graphics_FillRect},
+                {"draw_triangle",          Graphics_DrawTriangle},
+                {"fill_triangle",          Graphics_FillTriangle},
 
-            {"load_sprite", Graphics_LoadSprite},
-            {"unload_sprite", Graphics_UnloadSprite},
-            {"create_decal", Graphics_CreateDecal},
-            {"destroy_decal", Graphics_DestroyDecal},
+                {"load_sprite",            Graphics_LoadSprite},
+                {"unload_sprite",          Graphics_UnloadSprite},
+                {"create_decal",           Graphics_CreateDecal},
+                {"destroy_decal",          Graphics_DestroyDecal},
 
-            {"draw_sprite", Graphics_DrawSprite},
-            {"draw_partial_sprite", Graphics_DrawPartialSprite},
-            {"draw_decal", Graphics_DrawDecal},
-            {"draw_rotated_decal", Graphics_DrawRotatedDecal},
+                {"draw_sprite",            Graphics_DrawSprite},
+                {"draw_partial_sprite",    Graphics_DrawPartialSprite},
+                {"draw_decal",             Graphics_DrawDecal},
+                {"draw_rotated_decal",     Graphics_DrawRotatedDecal},
 
-            {"draw_string", Graphics_DrawString},
+                {"draw_string",            Graphics_DrawString},
 
-            {NULL, NULL}};
+                {NULL, NULL}};
 
-        static int GraphicsRegisterFunctions(lua_State *L)
-        {
+        static int GraphicsRegisterFunctions(lua_State *L) {
             return RegisterLuaModule(L, "graphics", GraphicsFunctions);
         }
 
@@ -1121,91 +1153,80 @@ namespace PGEApp
         // Input
         ///////////////////////////////////////////////
 
-        DEFINE_LUA_FUNC(Input_IsKeyPressed)
-        {
-            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Input_IsKeyPressed) {
+            olc::Key keycode = (olc::Key) lua_tointeger(L, 1);
             bool pressed = instance->GetKey(keycode).bPressed;
             lua_pushboolean(L, pressed);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_IsKeyHeld)
-        {
-            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Input_IsKeyHeld) {
+            olc::Key keycode = (olc::Key) lua_tointeger(L, 1);
             bool held = instance->GetKey(keycode).bHeld;
             lua_pushboolean(L, held);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_IsKeyReleased)
-        {
-            olc::Key keycode = (olc::Key)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Input_IsKeyReleased) {
+            olc::Key keycode = (olc::Key) lua_tointeger(L, 1);
             bool released = instance->GetKey(keycode).bReleased;
             lua_pushboolean(L, released);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_IsMousePressed)
-        {
-            auto mouseId = (uint32_t)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Input_IsMousePressed) {
+            auto mouseId = (uint32_t) lua_tointeger(L, 1);
             lua_pushboolean(L, instance->GetMouse(mouseId).bPressed);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_IsMouseHeld)
-        {
-            auto mouseId = (uint32_t)lua_tointeger(L, 1);
+        DEFINE_LUA_FUNC(Input_IsMouseHeld) {
+            auto mouseId = (uint32_t) lua_tointeger(L, 1);
             lua_pushboolean(L, instance->GetMouse(mouseId).bHeld);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_IsMouseReleased)
-        {
+        DEFINE_LUA_FUNC(Input_IsMouseReleased) {
             auto mouseId = lua_tointeger(L, 1);
             lua_pushboolean(L, instance->GetMouse(mouseId).bReleased);
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_GetMouseX)
-        {
+        DEFINE_LUA_FUNC(Input_GetMouseX) {
             lua_pushnumber(L, instance->GetMouseX());
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_GetMouseY)
-        {
+        DEFINE_LUA_FUNC(Input_GetMouseY) {
             lua_pushnumber(L, instance->GetMouseY());
             return 1;
         }
 
-        DEFINE_LUA_FUNC(Input_GetMouseWheel)
-        {
+        DEFINE_LUA_FUNC(Input_GetMouseWheel) {
             lua_pushnumber(L, instance->GetMouseWheel());
             return 1;
         }
 
         static const luaL_Reg InputFunctions[] = {
-            {"is_key_pressed", Input_IsKeyPressed},
-            {"is_key_held", Input_IsKeyHeld},
-            {"is_key_released", Input_IsKeyReleased},
-            {"is_mouse_pressed", Input_IsMousePressed},
-            {"is_mouse_held", Input_IsMouseHeld},
-            {"is_mouse_released", Input_IsMouseReleased},
-            {"mouse_x", Input_GetMouseX},
-            {"mouse_y", Input_GetMouseY},
-            {"mouse_wheel", Input_GetMouseWheel},
-            {NULL, NULL}};
+                {"is_key_pressed",    Input_IsKeyPressed},
+                {"is_key_held",       Input_IsKeyHeld},
+                {"is_key_released",   Input_IsKeyReleased},
+                {"is_mouse_pressed",  Input_IsMousePressed},
+                {"is_mouse_held",     Input_IsMouseHeld},
+                {"is_mouse_released", Input_IsMouseReleased},
+                {"mouse_x",           Input_GetMouseX},
+                {"mouse_y",           Input_GetMouseY},
+                {"mouse_wheel",       Input_GetMouseWheel},
+                {NULL, NULL}};
 
-        static int InputRegisterFunctions(lua_State *L)
-        {
+        static int InputRegisterFunctions(lua_State *L) {
             return RegisterLuaModule(L, "input", InputFunctions);
         }
 
 #undef DEFINE_LUA_FUNC
     }
 
-    bool Run()
-    {
+    bool Run() {
         _::instance = new _::App();
         auto app = _::instance;
 
