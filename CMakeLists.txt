@@ -6,6 +6,7 @@ project(${PROJ_NAME})
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_FIND_FRAMEWORK LAST)
 
 option(DEBUG "Debug Version" on)
 
@@ -97,6 +98,7 @@ endif()
 # Set include path
 include_directories(libs/lua)
 include_directories(libs/olcPixelGameEngine)
+include_directories(libs/LuaBridge)
 
 aux_source_directory(. SRC_FILES)
 file(GLOB HEADERS "${PROJECT_SOURCE_DIR}/*.h")
@@ -119,8 +121,9 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 7.5)
     add_definitions(-DFORCE_EXPERIMENTAL_FS)
 endif()
 
-add_subdirectory(libs/lua)
+# Add Lua Lib
 add_definitions(-DBUILD_LUA_AS_CLIB)
+add_subdirectory(libs/lua)
 
 add_executable(
     ${PROJ_NAME}
@@ -156,7 +159,17 @@ else()
 endif()
 
 # Copy lua files
+if(WIN32)
 add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${EXECUTABLE_OUTPUT_PATH}/_pge.lua")
+    COMMAND if $<CONFIG:Debug> neq 0 ("${CMAKE_COMMAND}" -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${EXECUTABLE_OUTPUT_PATH}/Debug/_pge.lua")
+    COMMAND if $<CONFIG:Debug> neq 0 ("${CMAKE_COMMAND}" -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${EXECUTABLE_OUTPUT_PATH}/Debug/game.lua")
+
+    COMMAND if $<CONFIG:Release> neq 0 ("${CMAKE_COMMAND}" -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${EXECUTABLE_OUTPUT_PATH}/Release/_pge.lua")
+    COMMAND if $<CONFIG:Release> neq 0 ("${CMAKE_COMMAND}" -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${EXECUTABLE_OUTPUT_PATH}/Release/game.lua")
+)
+else()
 add_custom_command(TARGET ${PROJ_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${EXECUTABLE_OUTPUT_PATH}/game.lua")
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/_pge.lua" "${EXECUTABLE_OUTPUT_PATH}/_pge.lua"
+    COMMAND ${CMAKE_COMMAND} -E copy "${PROJ_SOURCE_ROOT}/game.lua" "${EXECUTABLE_OUTPUT_PATH}/game.lua"
+)
+endif()
